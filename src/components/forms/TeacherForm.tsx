@@ -7,22 +7,20 @@ import InputField from "../InputField";
 import Image from "next/image";
 
 const schema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters long!" })
-    .max(20, { message: "Username must be at most 20 characters long!" }),
+  staffId: z.string().min(1, { message: "Staff ID is required!" }),
+  firstName: z.string().min(1, { message: "First name is required!" }),
+  lastName: z.string().min(1, { message: "Last name is required!" }),
+  dateOfBirth: z.string().min(1, { message: "Date of birth is required!" }),
+  gender: z.string().min(1, { message: "Gender is required!" }),
+  religion: z.string().min(1, { message: "Religion is required!" }),
+  phoneNumber: z.string().min(1, { message: "Phone number is required!" }),
   email: z.string().email({ message: "Invalid email address!" }),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters long!" }),
-  firstName: z.string().min(1, { message: "First name is required!" }),
-  lastName: z.string().min(1, { message: "Last name is required!" }),
-  phone: z.string().min(1, { message: "Phone is required!" }),
   address: z.string().min(1, { message: "Address is required!" }),
-  bloodType: z.string().min(1, { message: "Blood Type is required!" }),
-  birthday: z.date({ message: "Birthday is required!" }),
-  sex: z.enum(["male", "female"], { message: "Sex is required!" }),
-  img: z.instanceof(File, { message: "Image is required" }),
+  role: z.string().min(1, { message: "Role is required!" }),
+  qualification: z.string().min(1, { message: "Qualification is required!" }),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -42,123 +40,361 @@ const TeacherForm = ({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
+  const onSubmit = handleSubmit(async (formData) => {
+    try {
+      const url = type === "create" ? "/api/staff" : `/api/staff/${data?.id}`;
+      const method = type === "create" ? "POST" : "PUT";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to ${type} staff`);
+      }
+
+      // Handle success (close modal, refresh data, etc.)
+      console.log(
+        `Staff ${type === "create" ? "created" : "updated"} successfully`
+      );
+      window.location.reload(); // Simple refresh for now
+    } catch (error: any) {
+      console.error(
+        `Error ${type === "create" ? "creating" : "updating"} staff:`,
+        error.message
+      );
+    }
   });
 
   return (
-    <form className="flex flex-col gap-8" onSubmit={onSubmit}>
-      <h1 className="text-xl font-semibold">Create a new teacher</h1>
-      <span className="text-xs text-gray-400 font-medium">
-        Authentication Information
-      </span>
-      <div className="flex justify-between flex-wrap gap-4">
-        <InputField
-          label="Username"
-          name="username"
-          defaultValue={data?.username}
-          register={register}
-          error={errors?.username}
-        />
-        <InputField
-          label="Email"
-          name="email"
-          defaultValue={data?.email}
-          register={register}
-          error={errors?.email}
-        />
-        <InputField
-          label="Password"
-          name="password"
-          type="password"
-          defaultValue={data?.password}
-          register={register}
-          error={errors?.password}
-        />
-      </div>
-      <span className="text-xs text-gray-400 font-medium">
-        Personal Information
-      </span>
-      <div className="flex justify-between flex-wrap gap-4">
-        <InputField
-          label="First Name"
-          name="firstName"
-          defaultValue={data?.firstName}
-          register={register}
-          error={errors.firstName}
-        />
-        <InputField
-          label="Last Name"
-          name="lastName"
-          defaultValue={data?.lastName}
-          register={register}
-          error={errors.lastName}
-        />
-        <InputField
-          label="Phone"
-          name="phone"
-          defaultValue={data?.phone}
-          register={register}
-          error={errors.phone}
-        />
-        <InputField
-          label="Address"
-          name="address"
-          defaultValue={data?.address}
-          register={register}
-          error={errors.address}
-        />
-        <InputField
-          label="Blood Type"
-          name="bloodType"
-          defaultValue={data?.bloodType}
-          register={register}
-          error={errors.bloodType}
-        />
-        <InputField
-          label="Birthday"
-          name="birthday"
-          defaultValue={data?.birthday}
-          register={register}
-          error={errors.birthday}
-          type="date"
-        />
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="text-xs text-gray-500">Sex</label>
-          <select
-            className="ring-[1.5px] ring-gray-300 p-2 rounded-md text-sm w-full"
-            {...register("sex")}
-            defaultValue={data?.sex}
-          >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-          {errors.sex?.message && (
-            <p className="text-xs text-red-400">
-              {errors.sex.message.toString()}
-            </p>
-          )}
+    <div className="max-w-4xl mx-auto p-6">
+      <form onSubmit={onSubmit} className="space-y-8">
+        {/* Header Section */}
+        <div className="text-center border-b border-gray-200 pb-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl text-white font-bold">
+              {type === "create" ? "+" : "✏️"}
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {type === "create" ? "Add New Staff Member" : "Update Staff Member"}
+          </h1>
+          <p className="text-gray-600 mt-2">
+            {type === "create"
+              ? "Fill in the details to create a new staff member"
+              : "Update the staff member information below"}
+          </p>
         </div>
-        <div className="flex flex-col gap-2 w-full md:w-1/4 justify-center">
-          <label
-            className="text-xs text-gray-500 flex items-center gap-2 cursor-pointer"
-            htmlFor="img"
-          >
-            <Image src="/upload.png" alt="" width={28} height={28} />
-            <span>Upload a photo</span>
-          </label>
-          <input type="file" id="img" {...register("img")} className="hidden" />
-          {errors.img?.message && (
-            <p className="text-xs text-red-400">
-              {errors.img.message.toString()}
-            </p>
-          )}
+
+        {/* Basic Information Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">👤</span>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Basic Information
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Staff ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("staffId")}
+                defaultValue={data?.staffId}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter staff ID (e.g., STF001)"
+              />
+              {errors.staffId && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.staffId.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("firstName")}
+                defaultValue={data?.firstName}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter first name"
+              />
+              {errors.firstName && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.firstName.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("lastName")}
+                defaultValue={data?.lastName}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter last name"
+              />
+              {errors.lastName && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.lastName.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Date of Birth <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("dateOfBirth")}
+                type="date"
+                defaultValue={data?.dateOfBirth}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              />
+              {errors.dateOfBirth && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.dateOfBirth.message}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-      <button className="bg-blue-400 text-white p-2 rounded-md">
-        {type === "create" ? "Create" : "Update"}
-      </button>
-    </form>
+
+        {/* Contact Information Section */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">📞</span>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Contact Information
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("email")}
+                type="email"
+                defaultValue={data?.email}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                placeholder="staff@school.com"
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("phoneNumber")}
+                defaultValue={data?.phoneNumber}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                placeholder="+1 (555) 123-4567"
+              />
+              {errors.phoneNumber && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.phoneNumber.message}
+                </p>
+              )}
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Address <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                {...register("address")}
+                defaultValue={data?.address}
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
+                placeholder="Enter full address"
+              />
+              {errors.address && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.address.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Personal Information Section */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">🏠</span>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Personal Information
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Gender <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...register("gender")}
+                defaultValue={data?.gender}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+              {errors.gender && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.gender.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Religion <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("religion")}
+                defaultValue={data?.religion}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter religion"
+              />
+              {errors.religion && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.religion.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Professional Information Section */}
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">💼</span>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Professional Information
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Role <span className="text-red-500">*</span>
+              </label>
+              <select
+                {...register("role")}
+                defaultValue={data?.role}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+              >
+                <option value="">Select Role</option>
+                <option value="Admin">Admin</option>
+                <option value="Teacher">Teacher</option>
+              </select>
+              {errors.role && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.role.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Qualification <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("qualification")}
+                defaultValue={data?.qualification}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                placeholder="e.g., Masters in Education"
+              />
+              {errors.qualification && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.qualification.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Authentication Section */}
+        <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm">🔐</span>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Authentication
+            </h2>
+          </div>
+
+          <div className="max-w-md">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("password")}
+                type="password"
+                defaultValue={data?.password}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter secure password"
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Password must be at least 8 characters long
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
+            onClick={() => window.location.reload()}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+          >
+            {type === "create" ? "Create Staff Member" : "Update Staff Member"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

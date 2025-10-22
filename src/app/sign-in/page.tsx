@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 import AuthenticationInput from "@/components/AuthenticationInput";
 import PasswordInput from "@/components/PasswordInput";
-import { useForm } from "react-hook-form";
+import DropSelect from "@/components/DropSelect";
+import { useForm, Controller } from "react-hook-form";
 import { paths } from "@/lib/paths";
 import { useRouter } from "next/navigation";
 import { showError } from "@/lib/toast";
@@ -14,6 +15,7 @@ const SignIn = () => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset,
   } = useForm();
@@ -21,25 +23,45 @@ const SignIn = () => {
   const handleSignIn = async (data: any) => {
     setIsLoading(true);
     try {
-      const response = await fetch(paths.api.auth.signin, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      });
+      // Call external API
+      const response = await fetch(
+        "https://ui-staff-school-backend.onrender.com/authentication/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({
+            username: data.username,
+            password: data.password,
+            role: data.role,
+          }),
+        }
+      );
+
       const result = await response.json();
       if (!response.ok) {
         throw new Error(result.error || "Sign in failed");
       }
-      // After sign in, fetch user profile
-      const profileRes = await fetch(paths.api.auth.me);
-      const profile = await profileRes.json();
+
+      // Store the external token and user data
+      if (result.token) {
+        document.cookie = `token=${result.token}; path=/; max-age=${
+          7 * 24 * 60 * 60
+        }`;
+      }
+
       reset();
-      router.push(paths.home);
+
+      // Route based on selected role
+      if (data.role === "Admin") {
+        router.push(paths.dashboard.admin);
+      } else if (data.role === "Teacher") {
+        router.push(paths.dashboard.teacher);
+      } else {
+        router.push(paths.dashboard.student);
+      }
     } catch (err: any) {
       showError(err.message);
     } finally {
@@ -70,9 +92,9 @@ const SignIn = () => {
             className="flex flex-col space-y-4"
           >
             <AuthenticationInput
-              name="email"
-              label="Email"
-              placeholder="Enter your email"
+              name="username"
+              label="Username"
+              placeholder="Enter your username"
               register={register}
               errors={errors}
             />
@@ -82,6 +104,18 @@ const SignIn = () => {
               placeholder="Enter your password"
               register={register}
               rules={{}}
+              errors={errors}
+            />
+            <DropSelect
+              name="role"
+              label="Role"
+              placeholder="Select your role"
+              control={control}
+              options={[
+                { label: "Admin", value: "Admin" },
+                { label: "Teacher", value: "Teacher" },
+                { label: "Student", value: "Student" },
+              ]}
               errors={errors}
             />
             <button
@@ -94,13 +128,7 @@ const SignIn = () => {
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">
-            Don&apos;t have an account?{" "}
-            <Link
-              href={paths.auth.signUp}
-              className="text-indigo-600 hover:text-indigo-800 font-medium"
-            >
-              Create one
-            </Link>
+            Contact your administrator for account access
           </div>
         </div>
       </div>

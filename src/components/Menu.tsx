@@ -1,22 +1,24 @@
+"use client";
 import { role } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const menuItems = [
   {
     title: "MENU",
     items: [
-      {
-        icon: "/home.png",
-        label: "Home",
-        href: "/",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
+      // {
+      //   icon: "/home.png",
+      //   label: "Home",
+      //   href: "/",
+      //   visible: ["admin", "teacher", "student", "parent"],
+      // },
       {
         icon: "/teacher.png",
         label: "Teachers",
         href: "/list/teachers",
-        visible: ["admin", "teacher"],
+        visible: ["admin"],
       },
       {
         icon: "/student.png",
@@ -63,7 +65,7 @@ const menuItems = [
       {
         icon: "/result.png",
         label: "Results",
-        href: "/list/results",
+        href: "/results",
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
@@ -118,6 +120,21 @@ const menuItems = [
 ];
 
 const Menu = () => {
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    // Handle exact matches
+    if (pathname === href) return true;
+
+    // Handle nested routes (e.g., /results/add should highlight /results)
+    if (href !== "/" && pathname.startsWith(href + "/")) return true;
+
+    // Handle specific cases for results pages
+    if (href === "/results" && pathname.startsWith("/results")) return true;
+
+    return false;
+  };
+
   return (
     <div className="mt-4 text-sm">
       {menuItems.map((i) => (
@@ -127,11 +144,16 @@ const Menu = () => {
           </span>
           {i.items.map((item) => {
             if (item.visible.includes(role)) {
+              const active = isActive(item.href);
               return (
                 <Link
                   href={item.href}
                   key={item.label}
-                  className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-lamaSkyLight"
+                  className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors ${
+                    active
+                      ? "bg-indigo-100 text-indigo-700 font-medium"
+                      : "text-gray-500 hover:bg-lamaSkyLight hover:text-gray-700"
+                  }`}
                 >
                   <Image src={item.icon} alt="" width={20} height={20} />
                   <span className="hidden lg:block">{item.label}</span>

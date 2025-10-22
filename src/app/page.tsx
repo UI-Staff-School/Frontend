@@ -24,12 +24,6 @@ const Homepage = () => {
               >
                 Sign In
               </Link>
-              <Link
-                href={paths.auth.signUp}
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-white text-indigo-700 font-medium border border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50 shadow-sm"
-              >
-                Create Account
-              </Link>
             </div>
           </div>
           <div className="relative">
