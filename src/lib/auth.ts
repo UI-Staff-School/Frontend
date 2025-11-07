@@ -24,19 +24,100 @@ export async function getUserFromRequest(
       ? authHeader.slice(7)
       : undefined;
     const token = bearerToken || req.cookies.get("token")?.value;
-    if (!token) return null;
+
+    if (!token) {
+      console.log("No token found in request");
+      return null;
+    }
+
+    console.log("Token found, attempting validation...");
 
     // Try to verify token with our JWT secret first (for internal tokens)
+    let isInternalJWT = false;
     try {
       const payload = jwt.verify(token, JWT_SECRET) as any;
-      const user = await prisma.user.findUnique({
-        where: { id: payload.userId },
-      });
-      if (!user) return null;
-      return { id: user.id, email: user.email, role: user.role };
+      isInternalJWT = true;
+      console.log("Token is internal JWT, userId:", payload.userId);
+
+      // Only try database query if Prisma is available
+      if (prisma) {
+        try {
+          const user = await prisma.user.findUnique({
+            where: { id: payload.userId },
+          });
+          if (!user) {
+            console.log(
+              "User not found in database for userId:",
+              payload.userId
+            );
+            // Fall through to external API validation
+          } else {
+            console.log("User found in database:", user.email);
+            return { id: user.id, email: user.email, role: user.role };
+          }
+        } catch (dbError) {
+          // If database query fails, try external API validation
+          console.warn("Database query failed, trying external API:", dbError);
+        }
+      } else {
+        // If Prisma is not available, skip to external API validation
+        console.warn("Prisma not available, using external API validation");
+      }
     } catch (jwtError) {
-      // If JWT verification fails, try to validate with external API
+      // If JWT verification fails, token is likely from external API
+      console.log(
+        "Token is not internal JWT, trying to decode as external JWT"
+      );
+
+      // Try to decode the JWT without verification (external API tokens)
       try {
+        // Decode JWT without verification to extract payload
+        const decoded = jwt.decode(token) as any;
+
+        if (decoded && typeof decoded === "object") {
+          console.log("Decoded JWT payload:", decoded);
+
+          // Extract user information from the JWT payload
+          // Adjust these fields based on what the external API includes in the token
+          const userId = decoded.id || decoded.userId || decoded.sub || 1;
+          const email = decoded.email || decoded.username;
+          const username = decoded.username;
+          const role = decoded.role;
+
+          if (email || username) {
+            // Map external user data to our AuthUser format
+            const mappedRole =
+              role === "Admin" || role === "admin"
+                ? "ADMIN"
+                : role === "Teacher" || role === "teacher"
+                ? "TEACHER"
+                : role === "Student" || role === "student"
+                ? "STUDENT"
+                : "ADMIN";
+
+            console.log("Extracted user from JWT:", {
+              userId,
+              email: email || username,
+              role: mappedRole,
+            });
+
+            return {
+              id: userId,
+              email: email || username,
+              name: decoded.name || decoded.fullName,
+              firstName: decoded.firstName || decoded.first_name,
+              lastName: decoded.lastName || decoded.last_name,
+              role: mappedRole,
+            };
+          }
+        }
+      } catch (decodeError: any) {
+        console.error("Failed to decode JWT:", decodeError.message);
+      }
+
+      // Try to validate with external API as fallback (though it may not exist)
+      try {
+        console.log("Trying external API validation endpoint...");
         const response = await fetch(
           "https://ui-staff-school-backend.onrender.com/authentication/validate",
           {
@@ -48,8 +129,11 @@ export async function getUserFromRequest(
           }
         );
 
+        console.log("External API response status:", response.status);
+
         if (response.ok) {
           const userData = await response.json();
+          console.log("External API validation successful:", userData);
           // Map external user data to our AuthUser format
           return {
             id: userData.id || 1,
@@ -66,15 +150,24 @@ export async function getUserFromRequest(
                 ? "STUDENT"
                 : "ADMIN",
           };
+        } else {
+          const errorText = await response.text();
+          console.error(
+            "External API validation failed:",
+            response.status,
+            errorText
+          );
         }
-      } catch (apiError) {
+      } catch (apiError: any) {
         // If external API validation fails, return null
-        return null;
+        console.error("External API validation error:", apiError.message);
       }
     }
 
+    console.log("All validation attempts failed");
     return null;
-  } catch (e) {
+  } catch (e: any) {
+    console.error("Unexpected error in getUserFromRequest:", e.message);
     return null;
   }
 }

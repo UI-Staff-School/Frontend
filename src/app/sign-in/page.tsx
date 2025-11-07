@@ -47,9 +47,10 @@ const SignIn = () => {
 
       // Store the external token and user data
       if (result.token) {
-        document.cookie = `token=${result.token}; path=/; max-age=${
-          7 * 24 * 60 * 60
-        }`;
+        // Set cookie with proper attributes
+        const maxAge = 7 * 24 * 60 * 60; // 7 days
+        document.cookie = `token=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        console.log("Token cookie set successfully");
       }
 
       reset();
