@@ -30,7 +30,9 @@ const SingleTeacherPage = () => {
     const fetchStaff = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/staff/${params.id}`);
+        const response = await fetch(`/api/staff/${params.id}`, {
+          credentials: "include",
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch staff member");
         }

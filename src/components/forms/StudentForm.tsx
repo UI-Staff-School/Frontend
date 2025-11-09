@@ -67,6 +67,7 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 

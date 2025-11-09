@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiHeaders } from "@/lib/api-utils";
 
 const API_BASE_URL = "https://ui-staff-school-backend.onrender.com";
 
@@ -8,10 +9,7 @@ export async function GET(req: NextRequest) {
 
     const response = await fetch(`${API_BASE_URL}/student`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
+      headers: getApiHeaders(req),
     });
 
     console.log(`Response status: ${response.status}`);
@@ -127,10 +125,7 @@ export async function POST(req: NextRequest) {
 
     const response = await fetch(`${API_BASE_URL}/student`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
+      headers: getApiHeaders(req),
       body: JSON.stringify(body),
     });
 

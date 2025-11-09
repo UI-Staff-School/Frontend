@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       }))
     );
 
-    const tokenCookie = req.cookies.get("token");
+    const tokenCookie = req.cookies.get("access_token") || req.cookies.get("token");
     console.log("Token cookie exists:", !!tokenCookie);
     console.log(
       "Token cookie value (first 30 chars):",
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("User authenticated successfully:", user.email);
+    console.log("User authenticated successfully:", user.id, user.role);
     return NextResponse.json({ user });
   } catch (error: any) {
     console.error("Auth me endpoint error:", error);

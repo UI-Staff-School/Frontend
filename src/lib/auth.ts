@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAccessToken } from "./api-utils";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 export type AuthUser = {
-  id: number;
+  id: number | string;
   email: string;
   name?: string;
   firstName?: string;
@@ -18,12 +19,8 @@ export async function getUserFromRequest(
   req: NextRequest
 ): Promise<AuthUser | null> {
   try {
-    // Prefer Authorization header from external system; fallback to cookie
-    const authHeader = req.headers.get("authorization");
-    const bearerToken = authHeader?.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : undefined;
-    const token = bearerToken || req.cookies.get("token")?.value;
+    // Get token using the utility function (checks both access_token and token cookies)
+    const token = getAccessToken(req);
 
     if (!token) {
       console.log("No token found in request");
@@ -78,13 +75,11 @@ export async function getUserFromRequest(
           console.log("Decoded JWT payload:", decoded);
 
           // Extract user information from the JWT payload
-          // Adjust these fields based on what the external API includes in the token
-          const userId = decoded.id || decoded.userId || decoded.sub || 1;
-          const email = decoded.email || decoded.username;
-          const username = decoded.username;
+          // Based on the actual token structure: { id: "STF-0001", role: "Admin", iat, exp }
+          const userId = decoded.id || decoded.userId || decoded.sub;
           const role = decoded.role;
 
-          if (email || username) {
+          if (userId && role) {
             // Map external user data to our AuthUser format
             const mappedRole =
               role === "Admin" || role === "admin"
@@ -97,13 +92,13 @@ export async function getUserFromRequest(
 
             console.log("Extracted user from JWT:", {
               userId,
-              email: email || username,
               role: mappedRole,
             });
 
+            // Return user with ID from token (staffId format like "STF-0001")
             return {
               id: userId,
-              email: email || username,
+              email: decoded.email || "",
               name: decoded.name || decoded.fullName,
               firstName: decoded.firstName || decoded.first_name,
               lastName: decoded.lastName || decoded.last_name,

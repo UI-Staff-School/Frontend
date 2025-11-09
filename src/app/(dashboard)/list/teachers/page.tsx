@@ -73,7 +73,9 @@ const TeacherListPage = () => {
     const fetchStaff = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/staff");
+        const response = await fetch("/api/staff", {
+          credentials: "include",
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch staff");
         }

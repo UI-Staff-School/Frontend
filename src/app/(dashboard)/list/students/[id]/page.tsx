@@ -28,7 +28,9 @@ const SingleStudentPage = () => {
     const fetchStudent = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/student/${params.id}`);
+        const response = await fetch(`/api/student/${params.id}`, {
+          credentials: "include",
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch student");
         }

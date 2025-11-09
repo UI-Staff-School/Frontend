@@ -45,10 +45,40 @@ const SignIn = () => {
         throw new Error(result.error || "Sign in failed");
       }
 
-      // Store the external token and user data
-      if (result.token) {
+      // Store the access token and user data
+      if (result.access_token) {
         // Set cookie with proper attributes
         const maxAge = 7 * 24 * 60 * 60; // 7 days
+        // JWT tokens are safe to set directly (they're base64 encoded)
+        document.cookie = `access_token=${result.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        // Also store as token for backwards compatibility
+        document.cookie = `token=${result.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+        console.log("Access token cookie set successfully");
+        console.log(
+          "Token value (first 50 chars):",
+          result.access_token.substring(0, 50)
+        );
+
+        // Verify cookie was set (wait a bit for cookie to be set)
+        setTimeout(() => {
+          const cookieCheck = document.cookie
+            .split(";")
+            .find((c) => c.trim().startsWith("access_token="));
+          console.log(
+            "Cookie verification:",
+            cookieCheck ? "Cookie found" : "Cookie NOT found"
+          );
+          if (cookieCheck) {
+            console.log(
+              "Cookie value (first 50 chars):",
+              cookieCheck.substring(0, 50)
+            );
+          }
+        }, 100);
+      } else if (result.token) {
+        // Fallback for old format
+        const maxAge = 7 * 24 * 60 * 60; // 7 days
+        document.cookie = `access_token=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
         document.cookie = `token=${result.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
         console.log("Token cookie set successfully");
       }

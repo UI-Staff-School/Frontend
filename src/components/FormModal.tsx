@@ -15,12 +15,24 @@ const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
 const StudentForm = dynamic(() => import("./forms/StudentForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ClassLevelForm = dynamic(() => import("./forms/ClassLevelForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ClassArmForm = dynamic(() => import("./forms/ClassArmForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
 } = {
   teacher: (type, data) => <TeacherForm type={type} data={data} />,
   student: (type, data) => <StudentForm type={type} data={data} />,
+  subject: (type, data) => <SubjectForm type={type} data={data} />,
+  classLevel: (type, data) => <ClassLevelForm type={type} data={data} />,
+  classArm: (type, data) => <ClassArmForm type={type} data={data} />,
 };
 
 const FormModal = ({
@@ -35,6 +47,8 @@ const FormModal = ({
     | "parent"
     | "subject"
     | "class"
+    | "classLevel"
+    | "classArm"
     | "lesson"
     | "exam"
     | "assignment"
@@ -44,7 +58,7 @@ const FormModal = ({
     | "announcement";
   type: "create" | "update" | "delete";
   data?: any;
-  id?: number;
+  id?: number | string;
 }) => {
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
   const bgColor =
@@ -56,49 +70,109 @@ const FormModal = ({
 
   const [open, setOpen] = useState(false);
 
+  const getDeleteConfig = () => {
+    const configs: {
+      [key: string]: { endpoint: string; title: string; message: string };
+    } = {
+      teacher: {
+        endpoint: `/api/staff/${id}`,
+        title: "Delete Staff Member",
+        message:
+          "Are you sure you want to delete this staff member? This action cannot be undone and all associated data will be permanently removed.",
+      },
+      student: {
+        endpoint: `/api/student/${id}`,
+        title: "Delete Student",
+        message:
+          "Are you sure you want to delete this student? This action cannot be undone and all associated data will be permanently removed.",
+      },
+      subject: {
+        endpoint: `/api/subject/${id}`,
+        title: "Delete Subject",
+        message:
+          "Are you sure you want to delete this subject? This action cannot be undone and all associated data will be permanently removed.",
+      },
+      classLevel: {
+        endpoint: `/api/class/level/${id}`,
+        title: "Delete Class Level",
+        message:
+          "Are you sure you want to delete this class level? This action cannot be undone and all associated data will be permanently removed.",
+      },
+      classArm: {
+        endpoint: `/api/class/arms/${id}`,
+        title: "Delete Class Arm",
+        message:
+          "Are you sure you want to delete this class arm? This action cannot be undone and all associated data will be permanently removed.",
+      },
+    };
+
+    return configs[table] || {
+      endpoint: `/api/${table}/${id}`,
+      title: "Delete Item",
+      message:
+        "Are you sure you want to delete this item? This action cannot be undone.",
+    };
+  };
+
   const Form = () => {
     return type === "delete" && id ? (
       <div className="p-8 text-center">
         <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
           <span className="text-3xl text-white">🗑️</span>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Delete Staff Member
-        </h2>
-        <p className="text-gray-600 mb-8 max-w-md mx-auto">
-          Are you sure you want to delete this staff member? This action cannot
-          be undone and all associated data will be permanently removed.
-        </p>
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={() => setOpen(false)}
-            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                const response = await fetch(`/api/staff/${id}`, {
-                  method: "DELETE",
-                });
-                if (response.ok) {
-                  window.location.reload();
-                } else {
-                  console.error("Failed to delete staff member");
-                }
-              } catch (error) {
-                console.error("Error deleting staff member:", error);
-              }
-            }}
-            className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-          >
-            Delete Staff Member
-          </button>
-        </div>
+        {(() => {
+          const config = getDeleteConfig();
+          return (
+            <>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {config.title}
+              </h2>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                {config.message}
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setOpen(false)}
+                  className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const config = getDeleteConfig();
+                      const response = await fetch(config.endpoint, {
+                        method: "DELETE",
+                        credentials: "include",
+                      });
+                      if (response.ok) {
+                        window.location.reload();
+                      } else {
+                        const errorData = await response.json();
+                        alert(errorData.error || "Failed to delete item");
+                      }
+                    } catch (error: any) {
+                      console.error("Error deleting item:", error);
+                      alert("Failed to delete item. Please try again.");
+                    }
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+                >
+                  {getDeleteConfig().title}
+                </button>
+              </div>
+            </>
+          );
+        })()}
       </div>
     ) : type === "create" || type === "update" ? (
-      forms[table](type, data)
+      forms[table] ? (
+        forms[table](type, data)
+      ) : (
+        <div className="p-8 text-center">
+          <p className="text-red-600">Form not found for table: {table}</p>
+        </div>
+      )
     ) : (
       "Form not found!"
     );

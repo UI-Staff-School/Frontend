@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiHeaders } from "@/lib/api-utils";
 
 const API_BASE_URL = "https://ui-staff-school-backend.onrender.com";
 
@@ -13,10 +14,7 @@ export async function GET(
 
     const response = await fetch(`${API_BASE_URL}/staff/${params.id}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
+      headers: getApiHeaders(req),
     });
 
     if (!response.ok) {
@@ -74,10 +72,7 @@ export async function PUT(
 
     const response = await fetch(`${API_BASE_URL}/staff/${params.id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
+      headers: getApiHeaders(req),
       body: JSON.stringify(body),
     });
 
@@ -103,10 +98,7 @@ export async function DELETE(
   try {
     const response = await fetch(`${API_BASE_URL}/staff/${params.id}`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
+      headers: getApiHeaders(req),
     });
 
     if (!response.ok) {

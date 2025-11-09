@@ -67,7 +67,9 @@ const StudentListPage = () => {
     const fetchStudents = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/student");
+        const response = await fetch("/api/student", {
+          credentials: "include",
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch students");
         }
