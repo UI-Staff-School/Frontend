@@ -9,18 +9,23 @@ type Props = {
 };
 
 export default function Protected({ allowed, children, userRole }: Props) {
-  // userRole should come from your client-side auth context / fetch to /api/auth/me
-  if (!userRole) {
-    // you can display loader and fetch role
-    return <div className={styles.loading}>Loading...</div>;
-  }
-  if (!allowed.includes(userRole as any)) {
-    return (
-      <div className={styles.notAuthorized}>
-        You do not have permission to view this page.
-      </div>
-    );
-  }
+  // TEMPORARILY BYPASSED FOR DEVELOPMENT - All authorization checks disabled
+  // TODO: Re-enable authorization checks before production deployment
   return <>{children}</>;
+  
+  // ORIGINAL CODE - COMMENTED OUT FOR DEVELOPMENT:
+  // // userRole should come from your client-side auth context / fetch to /api/auth/me
+  // if (!userRole) {
+  //   // you can display loader and fetch role
+  //   return <div className={styles.loading}>Loading...</div>;
+  // }
+  // if (!allowed.includes(userRole as any)) {
+  //   return (
+  //     <div className={styles.notAuthorized}>
+  //       You do not have permission to view this page.
+  //     </div>
+  //   );
+  // }
+  // return <>{children}</>;
 }
 

@@ -6,11 +6,12 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getUserFromRequest(req);
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
+  // const user = await getUserFromRequest(req);
+  // if (!user)
+  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    requireRole(user, ["ADMIN"]); // only admin (headmaster)
+    // requireRole(user, ["ADMIN"]); // only admin (headmaster)
     const { headmasterComment } = await req.json();
     const updated = await prisma.result.update({
       where: { id: Number(params.id) },

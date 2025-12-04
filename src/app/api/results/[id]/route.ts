@@ -6,11 +6,12 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getUserFromRequest(req);
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
+  // const user = await getUserFromRequest(req);
+  // if (!user)
+  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    requireRole(user, ["TEACHER", "ADMIN"]);
+    // requireRole(user, ["TEACHER", "ADMIN"]);
     const body = await req.json();
     const id = Number(params.id);
     const existing = await prisma.result.findUnique({ where: { id } });
@@ -42,9 +43,10 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getUserFromRequest(req);
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
+  // const user = await getUserFromRequest(req);
+  // if (!user)
+  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const id = Number(params.id);
@@ -73,12 +75,13 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getUserFromRequest(req);
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
+  // const user = await getUserFromRequest(req);
+  // if (!user)
+  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    requireRole(user, ["TEACHER", "ADMIN"]);
+    // requireRole(user, ["TEACHER", "ADMIN"]);
     const id = Number(params.id);
 
     const existing = await prisma.result.findUnique({ where: { id } });
