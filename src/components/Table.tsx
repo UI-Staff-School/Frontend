@@ -7,6 +7,9 @@ const Table = ({
   renderRow: (item: any) => React.ReactNode;
   data: any[];
 }) => {
+  // Ensure data is always an array
+  const safeData = Array.isArray(data) ? data : [];
+
   return (
     <table className="w-full mt-4">
       <thead>
@@ -16,7 +19,7 @@ const Table = ({
           ))}
         </tr>
       </thead>
-      <tbody>{data.map((item) => renderRow(item))}</tbody>
+      <tbody>{safeData.map((item) => renderRow(item))}</tbody>
     </table>
   );
 };

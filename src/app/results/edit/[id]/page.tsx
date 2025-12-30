@@ -134,17 +134,32 @@ export default function EditResultPage() {
 
   return (
     <div className={styles.container}>
-      <Protected allowed={["ADMIN", "TEACHER"]} userRole={role}>
-        <ResultForm
-          initial={result}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          students={students}
-          subjects={subjects}
-          terms={terms}
-          isEditing={true}
-        />
-      </Protected>
+      <div className={styles.page}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageTitleGroup}>
+            <span className={styles.headerAccent}>
+              <span className={styles.headerAccentDot} />
+              Edit Result
+            </span>
+            <h1 className={styles.pageTitle}>Update Student Result</h1>
+            <p className={styles.pageSubtitle}>
+              Adjust scores or comments while keeping a clear record for this term.
+            </p>
+          </div>
+        </div>
+
+        <Protected allowed={["ADMIN", "TEACHER"]} userRole={role}>
+          <ResultForm
+            initial={result}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            students={students}
+            subjects={subjects}
+            terms={terms}
+            isEditing={true}
+          />
+        </Protected>
+      </div>
     </div>
   );
 }

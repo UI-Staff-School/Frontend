@@ -5,14 +5,18 @@ import { z } from "zod";
 import { useState } from "react";
 import Image from "next/image";
 
+const religionOptions = ["Christian", "Muslim", "Other"] as const;
+
 const studentSchema = z.object({
   admissionNo: z.string().min(1, "Admission number is required"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.string().min(1, "Gender is required"),
-  religion: z.string().min(1, "Religion is required"),
-  address: z.string().min(1, "Address is required"),
+  religion: z.enum(religionOptions, {
+    message:
+      "Religion must be one of the following values: Christian, Muslim, Other",
+  }),
   classArmId: z.number().min(1, "Class Arm ID is required"),
   yearOfAdmission: z.string().min(1, "Year of admission is required"),
 });
@@ -42,7 +46,6 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
       dateOfBirth: "",
       gender: "",
       religion: "",
-      address: "",
       classArmId: 1,
       yearOfAdmission: "",
     },
@@ -224,32 +227,21 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Religion <span className="text-red-500">*</span>
               </label>
-              <input
+              <select
                 {...register("religion")}
-                type="text"
-                placeholder="Enter religion"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
+                defaultValue={data?.religion || ""}
+              >
+                <option value="">Select religion</option>
+                {religionOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               {errors.religion && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.religion.message}
-                </p>
-              )}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                {...register("address")}
-                placeholder="Enter full address"
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.address.message}
                 </p>
               )}
             </div>

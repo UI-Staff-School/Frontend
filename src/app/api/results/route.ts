@@ -1,72 +1,63 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getUserFromRequest, requireRole } from "@/lib/auth";
+import { getApiHeaders } from "@/lib/api-utils";
+import { buildExternalApiUrl } from "@/lib/external-api";
 
-export async function POST(req: NextRequest) {
-  const user = await getUserFromRequest(req);
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+function buildResultUrl(search: string = "") {
+  return buildExternalApiUrl(`/result${search}`);
+}
+
+export async function GET(req: NextRequest) {
+  const search = new URL(req.url).search;
   try {
-    requireRole(user, ["TEACHER", "ADMIN"]);
-    const body = await req.json();
-    const { studentId, subjectId, termId, continuous, summary } = body;
-    const total = Number(continuous) + Number(summary);
-
-    const result = await prisma.result.create({
-      data: {
-        studentId,
-        subjectId,
-        termId,
-        continuous,
-        summary,
-        total,
-        teacherId: user.id,
-      },
+    const response = await fetch(buildResultUrl(search), {
+      method: "GET",
+      headers: getApiHeaders(req),
+      cache: "no-store",
     });
-    return NextResponse.json({ result }, { status: 201 });
-  } catch (err: any) {
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: payload?.message || "Failed to fetch results", details: payload },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json(payload, { status: 200 });
+  } catch (error: any) {
+    console.error("[Results][GET] Error:", error);
     return NextResponse.json(
-      { error: err.message || "Error" },
-      { status: 400 }
+      { error: error.message || "Unable to fetch results" },
+      { status: 500 }
     );
   }
 }
 
-export async function GET(req: NextRequest) {
-  const user = await getUserFromRequest(req);
-  const url = new URL(req.url);
-  const studentId = url.searchParams.get("studentId");
-  const termId = url.searchParams.get("termId");
-  const className = url.searchParams.get("className");
-
-  // Admin: can view all; teacher: we may filter to their students; student: only own
-  const where: any = {};
-  if (studentId) where.studentId = Number(studentId);
-  if (termId) where.termId = Number(termId);
-
-  // If user is student restrict to their studentId (you must link user->student)
-  if (user && user.role === "STUDENT") {
-    const student = await prisma.student.findUnique({
-      where: { userId: user.id },
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const response = await fetch(buildResultUrl(), {
+      method: "POST",
+      headers: getApiHeaders(req),
+      body: JSON.stringify(body),
     });
-    if (!student)
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
       return NextResponse.json(
-        { error: "Student profile missing" },
-        { status: 403 }
+        { error: payload?.message || "Failed to create result", details: payload },
+        { status: response.status }
       );
-    where.studentId = student.id;
+    }
+
+    return NextResponse.json(payload, { status: 201 });
+  } catch (error: any) {
+    console.error("[Results][POST] Error:", error);
+    return NextResponse.json(
+      { error: error.message || "Unable to create result" },
+      { status: 500 }
+    );
   }
-
-  const results = await prisma.result.findMany({
-    where,
-    include: {
-      student: true,
-      subject: true,
-      teacher: { select: { name: true } },
-    },
-    orderBy: { subjectId: "asc" },
-  });
-
-  return NextResponse.json({ results });
 }
-

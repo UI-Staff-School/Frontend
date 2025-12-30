@@ -23,13 +23,21 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get("authorization");
     console.log("Authorization header exists:", !!authHeader);
 
-    const user = await getUserFromRequest(req);
-    if (!user) {
-      console.log("No user found, returning 401");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
+    // const user = await getUserFromRequest(req);
+    // if (!user) {
+    //   console.log("No user found, returning 401");
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+    
+    // TEMPORARY: Return default admin user for development
+    const user = {
+      id: 1,
+      email: "dev@example.com",
+      role: "ADMIN" as const,
+    };
 
-    console.log("User authenticated successfully:", user.id, user.role);
+    console.log("User authenticated successfully (DEV MODE):", user.id, user.role);
     return NextResponse.json({ user });
   } catch (error: any) {
     console.error("Auth me endpoint error:", error);

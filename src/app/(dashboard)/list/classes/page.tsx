@@ -93,8 +93,14 @@ const ClassListPage = () => {
           throw new Error(errorData.error || "Failed to fetch class arms");
         }
 
-        const levelsData = await levelsResponse.json();
+        let levelsData = await levelsResponse.json();
         const armsData = await armsResponse.json();
+
+        // Normalize class levels to ensure consistent ID field
+        if (Array.isArray(levelsData)) {
+          const { normalizeClassLevels } = await import("@/lib/class-level-utils");
+          levelsData = normalizeClassLevels(levelsData);
+        }
 
         setClassLevels(Array.isArray(levelsData) ? levelsData : []);
         setClassArms(Array.isArray(armsData) ? armsData : []);
@@ -113,7 +119,9 @@ const ClassListPage = () => {
   // Filter and search functionality
   useEffect(() => {
     if (activeTab === "levels") {
-      let filtered = classLevels;
+      // Ensure classLevels is always an array
+      const safeLevels = Array.isArray(classLevels) ? classLevels : [];
+      let filtered = [...safeLevels];
 
       if (searchTerm) {
         filtered = filtered.filter(
@@ -150,7 +158,9 @@ const ClassListPage = () => {
 
       setFilteredLevels(filtered);
     } else {
-      let filtered = classArms;
+      // Ensure classArms is always an array
+      const safeArms = Array.isArray(classArms) ? classArms : [];
+      let filtered = [...safeArms];
 
       if (searchTerm) {
         filtered = filtered.filter(

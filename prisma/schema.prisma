@@ -13,6 +13,7 @@ model User {
   name      String?
   role      UserRole @default(TEACHER)
   password  String
+  passwordChangedAt DateTime?
   createdAt DateTime @default(now())
   // relations
   teacher   Teacher? @relation(fields: [teacherId], references: [id])

@@ -155,59 +155,94 @@ export default function ResultsPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Results Management</h1>
-        <ResultNavigation userRole={role} currentPage="results" />
-      </div>
-
-      <Protected allowed={["ADMIN", "TEACHER", "STUDENT"]} userRole={role}>
-        {error && <div className={styles.error}>{error}</div>}
-
-        <div className={styles.filters}>
-          <select
-            value={selectedStudent}
-            onChange={(e) => setSelectedStudent(e.target.value)}
-          >
-            <option value="">All Students</option>
-            {students.map((student) => (
-              <option key={student.id} value={student.id}>
-                {student.surname} {student.firstname} - {student.className}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedTerm}
-            onChange={(e) => setSelectedTerm(e.target.value)}
-          >
-            <option value="">All Terms</option>
-            {terms.map((term) => (
-              <option key={term.id} value={term.id}>
-                {term.name} - {term.year}
-              </option>
-            ))}
-          </select>
-
-          <button
-            className={styles.button}
-            onClick={handleFilter}
-            disabled={loading}
-          >
-            Filter Results
-          </button>
+      <div className={styles.page}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageTitleGroup}>
+            <span className={styles.headerAccent}>
+              <span className={styles.headerAccentDot} />
+              Result Management
+            </span>
+            <h1 className={styles.pageTitle}>Term Results Overview</h1>
+            <p className={styles.pageSubtitle}>
+              Filter by student and term to review continuous assessment, exams, and final scores.
+            </p>
+          </div>
+          <ResultNavigation userRole={role} currentPage="results" />
         </div>
 
-        <ResultTable
-          rows={rows}
-          showStudent={role === "ADMIN" || role === "TEACHER"}
-          showTeacher={role === "ADMIN" || role === "TEACHER"}
-          canEdit={role === "ADMIN" || role === "TEACHER"}
-          canAddHeadmasterComment={role === "ADMIN"}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onHeadmasterComment={handleHeadmasterComment}
-        />
-      </Protected>
+        <Protected allowed={["ADMIN", "TEACHER", "STUDENT"]} userRole={role}>
+          {error && <div className={styles.error}>{error}</div>}
+
+          <div className={styles.stats}>
+            <div className={styles.statCard}>
+              <div className={styles.statContent}>
+                <h3>{rows.length}</h3>
+                <p>Total results in view</p>
+              </div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statContent}>
+                <h3>{students.length}</h3>
+                <p>Students with records</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.filters}>
+            <div className={styles.filtersGroup}>
+              <span className={styles.filtersLabel}>Student</span>
+              <select
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+              >
+                <option value="">All Students</option>
+                {students.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.surname} {student.firstname} - {student.className}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.filtersGroup}>
+              <span className={styles.filtersLabel}>Term</span>
+              <select
+                value={selectedTerm}
+                onChange={(e) => setSelectedTerm(e.target.value)}
+              >
+                <option value="">All Terms</option>
+                {terms.map((term) => (
+                  <option key={term.id} value={term.id}>
+                    {term.name} - {term.year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.filtersGroup}>
+              <span className={styles.filtersLabel}>Actions</span>
+              <button
+                className={styles.button}
+                onClick={handleFilter}
+                disabled={loading}
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+
+          <ResultTable
+            rows={rows}
+            showStudent={role === "ADMIN" || role === "TEACHER"}
+            showTeacher={role === "ADMIN" || role === "TEACHER"}
+            canEdit={role === "ADMIN" || role === "TEACHER"}
+            canAddHeadmasterComment={role === "ADMIN"}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onHeadmasterComment={handleHeadmasterComment}
+          />
+        </Protected>
+      </div>
     </div>
   );
 }

@@ -34,7 +34,12 @@ export default function HeadmasterCommentForm({
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <h2>Add Headmaster Comment</h2>
+      <div>
+        <h2 className={styles.formTitle}>Add Headmaster Comment</h2>
+        <p className={styles.formSubtitle}>
+          Share a concise summary of the student&apos;s performance for this term.
+        </p>
+      </div>
 
       {error && <div className={styles.error}>{error}</div>}
 

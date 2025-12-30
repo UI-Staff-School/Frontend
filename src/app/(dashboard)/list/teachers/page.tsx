@@ -79,9 +79,10 @@ const TeacherListPage = () => {
         if (!response.ok) {
           throw new Error("Failed to fetch staff");
         }
-        const data = await response.json();
-        setStaff(data);
-        setFilteredStaff(data);
+        const payload = await response.json();
+        const staffArray = Array.isArray(payload) ? payload : payload.data || [];
+        setStaff(staffArray);
+        setFilteredStaff(staffArray);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -94,7 +95,9 @@ const TeacherListPage = () => {
 
   // Filter and search functionality
   useEffect(() => {
-    let filtered = staff;
+    // Ensure staff is always an array
+    const safeStaff = Array.isArray(staff) ? staff : [];
+    let filtered = [...safeStaff];
 
     // Search filter
     if (searchTerm) {
@@ -182,14 +185,14 @@ const TeacherListPage = () => {
       <td>
         <div className="flex items-center gap-2">
           <Link href={`/list/teachers/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky hover:bg-lamaSkyLight active:scale-95 transition-transform">
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
           </Link>
           {role === "admin" && (
             <>
               <FormModal table="teacher" type="update" data={item} />
-              <FormModal table="teacher" type="delete" id={parseInt(item.id)} />
+              <FormModal table="teacher" type="delete" id={item.id} />
             </>
           )}
         </div>

@@ -33,6 +33,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    
+    console.log("[Class Arms API] Creating class arm with payload:", JSON.stringify(body, null, 2));
 
     const response = await fetch(`${API_BASE_URL}/class/arms`, {
       method: "POST",
@@ -41,13 +43,31 @@ export async function POST(req: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to create class arm");
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText || "Failed to create class arm" };
+      }
+      
+      console.error("[Class Arms API] Backend error:", {
+        status: response.status,
+        error: errorData,
+        payload: body,
+      });
+      
+      return NextResponse.json(
+        { error: errorData.error || errorData.message || "Failed to create class arm" },
+        { status: response.status }
+      );
     }
 
     const data = await response.json();
+    console.log("[Class Arms API] Successfully created class arm:", data);
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
+    console.error("[Class Arms API] Exception:", error);
     return NextResponse.json(
       { error: error.message || "Failed to create class arm" },
       { status: 500 }

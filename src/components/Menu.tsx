@@ -30,7 +30,7 @@ const menuItems = [
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",
-        visible: ["admin", "teacher"],
+        visible: [],
       },
       {
         icon: "/subject.png",
@@ -48,24 +48,24 @@ const menuItems = [
         icon: "/lesson.png",
         label: "Lessons",
         href: "/list/lessons",
-        visible: ["admin", "teacher"],
+        visible: [],
       },
       {
         icon: "/exam.png",
         label: "Exams",
         href: "/list/exams",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: [],
       },
       {
         icon: "/assignment.png",
         label: "Assignments",
         href: "/list/assignments",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: [],
       },
       {
         icon: "/result.png",
         label: "Results",
-        href: "/results",
+        href: "/list/results",
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
@@ -78,19 +78,19 @@ const menuItems = [
         icon: "/calendar.png",
         label: "Events",
         href: "/list/events",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: [],
       },
       {
         icon: "/message.png",
         label: "Messages",
         href: "/list/messages",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: [],
       },
       {
         icon: "/announcement.png",
         label: "Announcements",
         href: "/list/announcements",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: [],
       },
     ],
   },
@@ -126,11 +126,8 @@ const Menu = () => {
     // Handle exact matches
     if (pathname === href) return true;
 
-    // Handle nested routes (e.g., /results/add should highlight /results)
+    // Handle nested routes (e.g., /list/results/add should highlight /list/results)
     if (href !== "/" && pathname.startsWith(href + "/")) return true;
-
-    // Handle specific cases for results pages
-    if (href === "/results" && pathname.startsWith("/results")) return true;
 
     return false;
   };
