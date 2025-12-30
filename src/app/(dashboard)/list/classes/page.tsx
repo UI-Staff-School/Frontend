@@ -93,8 +93,14 @@ const ClassListPage = () => {
           throw new Error(errorData.error || "Failed to fetch class arms");
         }
 
-        const levelsData = await levelsResponse.json();
+        let levelsData = await levelsResponse.json();
         const armsData = await armsResponse.json();
+
+        // Normalize class levels to ensure consistent ID field
+        if (Array.isArray(levelsData)) {
+          const { normalizeClassLevels } = await import("@/lib/class-level-utils");
+          levelsData = normalizeClassLevels(levelsData);
+        }
 
         setClassLevels(Array.isArray(levelsData) ? levelsData : []);
         setClassArms(Array.isArray(armsData) ? armsData : []);

@@ -1,13 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { useEffect, useState } from "react";
 
 const schema = z.object({
   className: z.string().min(1, { message: "Class name is required!" }),
-  coordinatorId: z.string().min(1, { message: "Coordinator ID is required!" }),
+  coordinatorName: z
+    .string()
+    .min(1, { message: "Coordinator is required!" })
+    .refine((val) => val.trim() !== "", { message: "Please select a coordinator" }),
   subjectIds: z.array(z.number()).optional().default([]),
 });
 
@@ -37,6 +40,7 @@ const ClassLevelForm = ({
 }) => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(true);
   // keep raw IDs as strings for checkbox UI; convert to numbers when submitting
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
@@ -61,6 +65,7 @@ const ClassLevelForm = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoadingStaff(true);
         const [staffResponse, subjectsResponse] = await Promise.all([
           fetch("/api/staff"),
           fetch("/api/subject"),
@@ -71,7 +76,15 @@ const ClassLevelForm = ({
           const staffData = Array.isArray(staffPayload)
             ? staffPayload
             : staffPayload.data || [];
+          console.log("Fetched staff data:", staffData);
+          console.log("Total staff:", staffData.length);
+          const teachers = staffData.filter((s: Staff) => 
+            s.role && (s.role.toLowerCase() === "teacher" || s.role === "Teacher")
+          );
+          console.log("Teachers found:", teachers.length, teachers);
           setStaff(staffData);
+        } else {
+          console.error("Failed to fetch staff:", staffResponse.status);
         }
 
         if (subjectsResponse.ok) {
@@ -83,6 +96,8 @@ const ClassLevelForm = ({
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoadingStaff(false);
       }
     };
 
@@ -94,14 +109,36 @@ const ClassLevelForm = ({
     handleSubmit,
     formState: { errors },
     setValue,
+    watch,
+    control,
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
-    defaultValues: data || {
-      className: "",
-      coordinatorId: "",
+    defaultValues: {
+      className: data?.className || "",
+      coordinatorName: "",
       subjectIds: [],
     },
+    mode: "onChange", // Validate on change for better UX
   });
+
+  // Watch coordinatorName to update coordinatorId internally
+  const selectedCoordinatorName = watch("coordinatorName");
+
+  // Set coordinator name from coordinatorId when staff data is loaded (for edit mode)
+  useEffect(() => {
+    if (data?.coordinatorId && staff.length > 0) {
+      const foundStaff = staff.find(
+        (s) => 
+          String(s.id || "") === String(data.coordinatorId) ||
+          String(s.staffId || "") === String(data.coordinatorId)
+      );
+      if (foundStaff) {
+        // Use id if available, otherwise use staffId
+        const identifier = foundStaff.id || foundStaff.staffId;
+        setValue("coordinatorName", String(identifier));
+      }
+    }
+  }, [data?.coordinatorId, staff, setValue]);
 
   // Keep form subjectIds in sync with selectedSubjects state (as numbers)
   useEffect(() => {
@@ -115,12 +152,44 @@ const ClassLevelForm = ({
 
   const onSubmit = handleSubmit(async (formData) => {
     try {
+      // Get coordinatorId from the selected coordinator name (which is actually the staff ID)
+      // Try to match by id first, then by staffId as fallback
+      const selectedStaff = staff.find(
+        (s) => 
+          String(s.id || "") === String(formData.coordinatorName) ||
+          String(s.staffId || "") === String(formData.coordinatorName)
+      );
+
+      if (!selectedStaff) {
+        throw new Error("Please select a valid coordinator.");
+      }
+
+      // Use id if available, otherwise use staffId
+      const identifier = selectedStaff.id || selectedStaff.staffId;
+      
+      // Try to convert to number if it's numeric, otherwise use as string
+      let coordinatorId: string | number;
+      const coordinatorIdNum = Number(identifier);
+      if (Number.isFinite(coordinatorIdNum) && coordinatorIdNum > 0) {
+        coordinatorId = coordinatorIdNum;
+      } else {
+        // If it's a string ID like "STF-0002", use it as is
+        coordinatorId = String(identifier);
+      }
+
+      // Convert subjectIds to numbers and filter out invalid ones
+      const subjectIdsNum = selectedSubjects
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id) && id > 0);
+
       const payload = {
-        ...formData,
-        subjectIds: selectedSubjects
-          .map((id) => Number(id))
-          .filter((id) => Number.isFinite(id)),
+        className: formData.className,
+        coordinatorId: coordinatorId, // Send as number or string, extracted from selected coordinator
+        subjectIds: subjectIdsNum, // Send as array of numbers
       };
+
+      console.log("Sending class level payload:", payload);
+      console.log("Selected coordinator:", selectedStaff.firstName, selectedStaff.lastName, "ID:", coordinatorId);
 
       const url =
         type === "create"
@@ -138,10 +207,17 @@ const ClassLevelForm = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to ${type} class level`);
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Backend error response:", errorData);
+        throw new Error(errorData.error || errorData.message || `Failed to ${type} class level`);
       }
 
+      const result = await response.json();
+      console.log("Class level created/updated successfully:", result);
+      
+      // Dispatch custom event to notify other components before reload
+      window.dispatchEvent(new CustomEvent("classLevelUpdated", { detail: result }));
+      
       window.location.reload();
     } catch (error: any) {
       console.error(
@@ -202,22 +278,97 @@ const ClassLevelForm = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Coordinator <span className="text-red-500">*</span>
             </label>
-            <select
-              {...register("coordinatorId")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select coordinator</option>
-              {staff
-                .filter((s) => s.role === "Teacher")
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.firstName} {s.lastName} ({s.staffId})
-                  </option>
-                ))}
-            </select>
-            {errors.coordinatorId && (
+            <Controller
+              name="coordinatorName"
+              control={control}
+              rules={{
+                required: "Coordinator is required!",
+                validate: (value) => {
+                  if (!value || value.trim() === "" || value === "") {
+                    return "Please select a coordinator";
+                  }
+                  return true;
+                },
+              }}
+              render={({ field }) => {
+                // Filter teachers - be more lenient with ID checking
+                const teachers = staff.filter((s) => {
+                  // Check role (case-insensitive)
+                  const roleStr = s.role ? String(s.role).trim() : "";
+                  const isTeacher = roleStr.toLowerCase() === "teacher";
+                  
+                  // Check ID - accept any truthy value (string, number, etc.)
+                  // Use id if available, otherwise fall back to staffId
+                  const identifier = s.id || s.staffId;
+                  const hasId = identifier !== undefined && identifier !== null && String(identifier).trim() !== "";
+                  
+                  if (isTeacher && !hasId) {
+                    console.warn("Teacher found without ID:", s);
+                  }
+                  
+                  return isTeacher && hasId;
+                });
+
+                console.log("Rendering coordinator dropdown - Teachers:", teachers.length, teachers);
+                console.log("All staff for debugging:", staff);
+
+                return (
+                  <select
+                    {...field}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={loadingStaff}
+                  >
+                    <option value="">
+                      {loadingStaff ? "Loading coordinators..." : "Select coordinator"}
+                    </option>
+                    {teachers.map((s) => {
+                      // Use id if available, otherwise use staffId as fallback
+                      const staffId = s.id ? String(s.id) : (s.staffId ? String(s.staffId) : "");
+                      const displayName = `${s.firstName || ""} ${s.lastName || ""}${s.staffId ? ` (${s.staffId})` : ""}`.trim();
+                      return (
+                        <option key={staffId || `teacher-${s.firstName}-${s.lastName}`} value={staffId}>
+                          {displayName || `Staff ${staffId}`}
+                        </option>
+                      );
+                    })}
+                  </select>
+                );
+              }}
+            />
+            {errors.coordinatorName && (
               <p className="mt-1 text-sm text-red-600">
-                {errors.coordinatorId.message}
+                {errors.coordinatorName.message}
+              </p>
+            )}
+            {(() => {
+              const teachers = staff.filter((s) => {
+                const roleStr = s.role ? String(s.role).trim() : "";
+                const isTeacher = roleStr.toLowerCase() === "teacher";
+                // Use id if available, otherwise fall back to staffId
+                const identifier = s.id || s.staffId;
+                const hasId = identifier !== undefined && identifier !== null && String(identifier).trim() !== "";
+                return isTeacher && hasId;
+              });
+              
+              if (teachers.length === 0 && !loadingStaff) {
+                const allRoles = Array.from(new Set(staff.map(s => s.role).filter(Boolean)));
+                return (
+                  <p className="mt-1 text-sm text-yellow-600">
+                    No teachers available. Please add staff members with Teacher role first.
+                    {staff.length > 0 && (
+                      <span className="block text-xs mt-1">
+                        Found {staff.length} staff member(s). Available roles: {allRoles.join(", ") || "none"}
+                      </span>
+                    )}
+                  </p>
+                );
+              }
+              return null;
+            })()}
+            {selectedCoordinatorName && selectedCoordinatorName.trim() !== "" && (
+              <p className="mt-1 text-xs text-gray-500">
+                Selected: {staff.find((s) => String(s.id) === selectedCoordinatorName)?.firstName}{" "}
+                {staff.find((s) => String(s.id) === selectedCoordinatorName)?.lastName}
               </p>
             )}
           </div>

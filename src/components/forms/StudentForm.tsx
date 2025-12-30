@@ -17,7 +17,6 @@ const studentSchema = z.object({
     message:
       "Religion must be one of the following values: Christian, Muslim, Other",
   }),
-  address: z.string().min(1, "Address is required"),
   classArmId: z.number().min(1, "Class Arm ID is required"),
   yearOfAdmission: z.string().min(1, "Year of admission is required"),
 });
@@ -47,7 +46,6 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
       dateOfBirth: "",
       gender: "",
       religion: "",
-      address: "",
       classArmId: 1,
       yearOfAdmission: "",
     },
@@ -244,23 +242,6 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
               {errors.religion && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.religion.message}
-                </p>
-              )}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                {...register("address")}
-                placeholder="Enter full address"
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.address.message}
                 </p>
               )}
             </div>

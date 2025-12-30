@@ -6,34 +6,92 @@ import { z } from "zod";
 import Image from "next/image";
 
 const religionOptions = ["Christian", "Muslim", "Other"] as const;
-const qualificationOptions = ["Diploma", "BEd", "MEd", "PhD", "BSc", "Other"] as const;
+const qualificationOptions = [
+  "Diploma",
+  "BEd",
+  "MEd",
+  "PhD",
+  "BSc",
+  "Other",
+] as const;
 
-const schema = z.object({
-  staffId: z.string().min(1, { message: "Staff ID is required!" }),
-  firstName: z.string().min(1, { message: "First name is required!" }),
-  lastName: z.string().min(1, { message: "Last name is required!" }),
-  dateOfBirth: z.string().min(1, { message: "Date of birth is required!" }),
-  gender: z.string().min(1, { message: "Gender is required!" }),
-  religion: z.enum(religionOptions, {
-    message:
-      "Religion must be one of the following values: Christian, Muslim, Other",
-  }),
-  phoneNumber: z
-    .string()
-    .regex(/^0\d{10}$/, {
-      message: "Phone number must follow 08121007480 (11 digits, starts with 0)",
+// Strong password rules: 8+ chars, upper, lower, number, special
+const passwordSchema = z
+  .string()
+  .min(8, { message: "Password must be at least 8 characters long!" })
+  .regex(/[A-Z]/, {
+    message: "Password must contain at least one uppercase letter",
+  })
+  .regex(/[a-z]/, {
+    message: "Password must contain at least one lowercase letter",
+  })
+  .regex(/[0-9]/, {
+    message: "Password must contain at least one number",
+  })
+  .regex(/[^A-Za-z0-9]/, {
+    message: "Password must contain at least one special character",
+  });
+
+const schema = z
+  .object({
+    staffId: z.string().min(1, { message: "Staff ID is required!" }),
+    firstName: z.string().min(1, { message: "First name is required!" }),
+    lastName: z.string().min(1, { message: "Last name is required!" }),
+    dateOfBirth: z
+      .string()
+      .min(1, { message: "Date of birth is required!" })
+      .refine((value) => {
+        const dob = new Date(value);
+        if (Number.isNaN(dob.getTime())) return false;
+        const today = new Date();
+        const minAgeDate = new Date(
+          today.getFullYear() - 18,
+          today.getMonth(),
+          today.getDate()
+        );
+        const maxAgeDate = new Date(
+          today.getFullYear() - 70,
+          today.getMonth(),
+          today.getDate()
+        );
+        // Staff must be between 18 and 70 years old
+        return dob <= minAgeDate && dob >= maxAgeDate;
+      }, {
+        message: "Staff must be between 18 and 70 years old",
+      }),
+    gender: z.string().min(1, { message: "Gender is required!" }),
+    religion: z.enum(religionOptions, {
+      message:
+        "Religion must be one of the following values: Christian, Muslim, Other",
     }),
-  email: z.string().email({ message: "Invalid email address!" }),
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters long!" }),
-  address: z.string().min(1, { message: "Address is required!" }),
-  role: z.string().min(1, { message: "Role is required!" }),
-  qualification: z.enum(qualificationOptions, {
-    message:
-      "Qualification must be one of the following values: Diploma, BEd, MEd, PhD, BSc, Other",
-  }),
-});
+    phoneNumber: z
+      .string()
+      .regex(/^0\d{10}$/, {
+        message:
+          "Phone number must follow 08121007480 format (11 digits, starts with 0)",
+      }),
+    email: z
+      .string()
+      .email({ message: "Invalid email address!" })
+      .max(100, { message: "Email is too long" }),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, {
+      message: "Confirm Password is required",
+    }),
+    address: z
+      .string()
+      .min(10, { message: "Address should be at least 10 characters long" })
+      .max(200, { message: "Address should not exceed 200 characters" }),
+    role: z.string().min(1, { message: "Role is required!" }),
+    qualification: z.enum(qualificationOptions, {
+      message:
+        "Qualification must be one of the following values: Diploma, BEd, MEd, PhD, BSc, Other",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type Inputs = z.infer<typeof schema>;
 
@@ -378,7 +436,7 @@ const TeacherForm = ({
             </h2>
           </div>
 
-          <div className="max-w-md">
+          <div className="max-w-md space-y-4">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 Password <span className="text-red-500">*</span>
@@ -386,7 +444,6 @@ const TeacherForm = ({
               <input
                 {...register("password")}
                 type="password"
-                defaultValue={data?.password}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
                 placeholder="Enter secure password"
               />
@@ -396,8 +453,26 @@ const TeacherForm = ({
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 8 characters long
+                Password must be at least 8 characters and include uppercase,
+                lowercase, number, and special character.
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("confirmPassword")}
+                type="password"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                placeholder="Re-enter password"
+              />
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
