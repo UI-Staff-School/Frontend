@@ -58,7 +58,9 @@ const SubjectListPage = () => {
 
   // Filter and search functionality
   useEffect(() => {
-    let filtered = subjects;
+    // Ensure subjects is always an array
+    const safeSubjects = Array.isArray(subjects) ? subjects : [];
+    let filtered = [...safeSubjects];
 
     // Search filter
     if (searchTerm) {

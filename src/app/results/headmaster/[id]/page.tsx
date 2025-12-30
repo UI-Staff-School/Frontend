@@ -101,40 +101,55 @@ export default function HeadmasterCommentPage() {
 
   return (
     <div className={styles.container}>
-      <Protected allowed={["ADMIN"]} userRole={role}>
-        <div className={styles.card}>
-          <h3>Result Details</h3>
-          <p>
-            <strong>Student:</strong> {result.student.surname} {""}
-            {result.student.firstname} {result.student.othername || ""}
-          </p>
-          <p>
-            <strong>Class:</strong> {result.student.className}
-          </p>
-          <p>
-            <strong>Subject:</strong> {result.subject.name}
-          </p>
-          <p>
-            <strong>Term:</strong> {result.term.name} - {result.term.year}
-          </p>
-          <p>
-            <strong>CA:</strong> {result.continuous}/30
-          </p>
-          <p>
-            <strong>Exam:</strong> {result.summary}/70
-          </p>
-          <p>
-            <strong>Total:</strong> {result.total}/100
-          </p>
+      <div className={styles.page}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageTitleGroup}>
+            <span className={styles.headerAccent}>
+              <span className={styles.headerAccentDot} />
+              Headmaster Review
+            </span>
+            <h1 className={styles.pageTitle}>Add Headmaster Comment</h1>
+            <p className={styles.pageSubtitle}>
+              Review the student&apos;s performance details before leaving an official comment.
+            </p>
+          </div>
         </div>
 
-        <HeadmasterCommentForm
-          resultId={result.id}
-          initialComment={result.comments || ""}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      </Protected>
+        <Protected allowed={["ADMIN"]} userRole={role}>
+          <div className={styles.card}>
+            <h3>Result Details</h3>
+            <p>
+              <strong>Student:</strong> {result.student.surname}{" "}
+              {result.student.firstname} {result.student.othername || ""}
+            </p>
+            <p>
+              <strong>Class:</strong> {result.student.className}
+            </p>
+            <p>
+              <strong>Subject:</strong> {result.subject.name}
+            </p>
+            <p>
+              <strong>Term:</strong> {result.term.name} - {result.term.year}
+            </p>
+            <p>
+              <strong>CA:</strong> {result.continuous}/30
+            </p>
+            <p>
+              <strong>Exam:</strong> {result.summary}/70
+            </p>
+            <p>
+              <strong>Total:</strong> {result.total}/100
+            </p>
+          </div>
+
+          <HeadmasterCommentForm
+            resultId={result.id}
+            initialComment={result.comments || ""}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
+        </Protected>
+      </div>
     </div>
   );
 }

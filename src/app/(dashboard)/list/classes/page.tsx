@@ -113,7 +113,9 @@ const ClassListPage = () => {
   // Filter and search functionality
   useEffect(() => {
     if (activeTab === "levels") {
-      let filtered = classLevels;
+      // Ensure classLevels is always an array
+      const safeLevels = Array.isArray(classLevels) ? classLevels : [];
+      let filtered = [...safeLevels];
 
       if (searchTerm) {
         filtered = filtered.filter(
@@ -150,7 +152,9 @@ const ClassListPage = () => {
 
       setFilteredLevels(filtered);
     } else {
-      let filtered = classArms;
+      // Ensure classArms is always an array
+      const safeArms = Array.isArray(classArms) ? classArms : [];
+      let filtered = [...safeArms];
 
       if (searchTerm) {
         filtered = filtered.filter(

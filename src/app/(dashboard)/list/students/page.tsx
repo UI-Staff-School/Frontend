@@ -88,7 +88,9 @@ const StudentListPage = () => {
 
   // Filter and search functionality
   useEffect(() => {
-    let filtered = students;
+    // Ensure students is always an array
+    const safeStudents = Array.isArray(students) ? students : [];
+    let filtered = [...safeStudents];
 
     // Search filter
     if (searchTerm) {

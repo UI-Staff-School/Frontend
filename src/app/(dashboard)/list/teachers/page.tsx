@@ -79,9 +79,10 @@ const TeacherListPage = () => {
         if (!response.ok) {
           throw new Error("Failed to fetch staff");
         }
-        const data = await response.json();
-        setStaff(data);
-        setFilteredStaff(data);
+        const payload = await response.json();
+        const staffArray = Array.isArray(payload) ? payload : payload.data || [];
+        setStaff(staffArray);
+        setFilteredStaff(staffArray);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -94,7 +95,9 @@ const TeacherListPage = () => {
 
   // Filter and search functionality
   useEffect(() => {
-    let filtered = staff;
+    // Ensure staff is always an array
+    const safeStaff = Array.isArray(staff) ? staff : [];
+    let filtered = [...safeStaff];
 
     // Search filter
     if (searchTerm) {

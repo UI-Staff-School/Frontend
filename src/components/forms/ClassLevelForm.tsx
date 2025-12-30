@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 const schema = z.object({
   className: z.string().min(1, { message: "Class name is required!" }),
   coordinatorId: z.string().min(1, { message: "Coordinator ID is required!" }),
-  subjectIds: z.array(z.number()).optional(),
+  subjectIds: z.array(z.number()).optional().default([]),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -24,6 +24,8 @@ type Staff = {
 type Subject = {
   id: string;
   subjectName: string;
+  subjectId?: string;
+  subjectID?: string;
 };
 
 const ClassLevelForm = ({
@@ -35,15 +37,26 @@ const ClassLevelForm = ({
 }) => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [selectedSubjects, setSelectedSubjects] = useState<number[]>([]);
+  // keep raw IDs as strings for checkbox UI; convert to numbers when submitting
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
+  // Hydrate selected subjects from edit data and ensure uniqueness
   useEffect(() => {
-    if (data?.subjectIds) {
-      setSelectedSubjects(
-        data.subjectIds.map((id: any) => (typeof id === "string" ? parseInt(id) : id))
-      );
+    if (!data?.subjectIds) {
+      setSelectedSubjects([]);
+      return;
     }
-  }, [data]);
+
+    const subjectIdsArray = Array.isArray(data.subjectIds) ? data.subjectIds : [];
+    const uniqueIds = Array.from(
+      new Set(
+        subjectIdsArray
+          .map((id: unknown) => String(id))
+          .filter((id: string) => id.trim().length > 0)
+      )
+    );
+    setSelectedSubjects(uniqueIds as string[]);
+  }, [data?.subjectIds]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,13 +67,19 @@ const ClassLevelForm = ({
         ]);
 
         if (staffResponse.ok) {
-          const staffData = await staffResponse.json();
-          setStaff(Array.isArray(staffData) ? staffData : []);
+          const staffPayload = await staffResponse.json();
+          const staffData = Array.isArray(staffPayload)
+            ? staffPayload
+            : staffPayload.data || [];
+          setStaff(staffData);
         }
 
         if (subjectsResponse.ok) {
-          const subjectsData = await subjectsResponse.json();
-          setSubjects(Array.isArray(subjectsData) ? subjectsData : []);
+          const subjectsPayload = await subjectsResponse.json();
+          const subjectsData = Array.isArray(subjectsPayload)
+            ? subjectsPayload
+            : subjectsPayload.data || [];
+          setSubjects(subjectsData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -74,6 +93,7 @@ const ClassLevelForm = ({
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm<Inputs>({
     resolver: zodResolver(schema),
     defaultValues: data || {
@@ -83,11 +103,23 @@ const ClassLevelForm = ({
     },
   });
 
+  // Keep form subjectIds in sync with selectedSubjects state (as numbers)
+  useEffect(() => {
+    setValue(
+      "subjectIds",
+      selectedSubjects
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id))
+    );
+  }, [selectedSubjects, setValue]);
+
   const onSubmit = handleSubmit(async (formData) => {
     try {
       const payload = {
         ...formData,
-        subjectIds: selectedSubjects,
+        subjectIds: selectedSubjects
+          .map((id) => Number(id))
+          .filter((id) => Number.isFinite(id)),
       };
 
       const url =
@@ -121,11 +153,9 @@ const ClassLevelForm = ({
   });
 
   const toggleSubject = (subjectId: string) => {
-    const id = parseInt(subjectId);
+    const id = String(subjectId);
     setSelectedSubjects((prev) =>
-      prev.includes(id)
-        ? prev.filter((sid) => sid !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
     );
   };
 
@@ -178,7 +208,7 @@ const ClassLevelForm = ({
             >
               <option value="">Select coordinator</option>
               {staff
-                .filter((s) => s.role === "Teacher" || s.role === "Admin")
+                .filter((s) => s.role === "Teacher")
                 .map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.firstName} {s.lastName} ({s.staffId})
@@ -198,22 +228,26 @@ const ClassLevelForm = ({
             </label>
             <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {subjects.map((subject) => (
-                  <label
-                    key={subject.id}
-                    className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedSubjects.includes(parseInt(subject.id))}
-                      onChange={() => toggleSubject(subject.id)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700">
-                      {subject.subjectName}
-                    </span>
-                  </label>
-                ))}
+                {subjects.map((subject) => {
+                  const subjectIdStr = String(subject.id ?? subject.subjectId ?? subject.subjectID ?? "");
+                  const isChecked = selectedSubjects.includes(subjectIdStr);
+                  return (
+                    <label
+                      key={subjectIdStr || subject.subjectName}
+                      className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSubject(subjectIdStr)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {subject.subjectName}
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
               {subjects.length === 0 && (
                 <p className="text-sm text-gray-500 text-center py-4">

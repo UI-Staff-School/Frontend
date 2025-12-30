@@ -86,7 +86,14 @@ export default function ResultForm({
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      <h2>{isEditing ? "Edit Result" : "Add New Result"}</h2>
+      <div>
+        <h2 className={styles.formTitle}>
+          {isEditing ? "Edit Result" : "Add New Result"}
+        </h2>
+        <p className={styles.formSubtitle}>
+          Enter continuous assessment and exam scores. We’ll calculate the total for you.
+        </p>
+      </div>
 
       {error && <div className={styles.error}>{error}</div>}
 
@@ -142,6 +149,9 @@ export default function ResultForm({
 
       <div className={styles.formGroup}>
         <label>CA Score (max 30)</label>
+        <span className={styles.fieldHint}>
+          Continuous assessment score for this subject in the current term.
+        </span>
         <input
           type="number"
           min="0"
@@ -153,6 +163,9 @@ export default function ResultForm({
 
       <div className={styles.formGroup}>
         <label>Exam Score (max 70)</label>
+        <span className={styles.fieldHint}>
+          Final exam score for this subject in the current term.
+        </span>
         <input
           type="number"
           min="0"

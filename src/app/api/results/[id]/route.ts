@@ -1,72 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getUserFromRequest, requireRole } from "@/lib/auth";
+import { getApiHeaders } from "@/lib/api-utils";
+import { buildExternalApiUrl } from "@/lib/external-api";
 
-export async function PUT(
+function buildResultDetailUrl(id: string) {
+  return buildExternalApiUrl(`/result/${id}`);
+}
+
+async function proxyRequest(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  method: "GET" | "PUT" | "DELETE",
+  id: string
 ) {
-  // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
-  // const user = await getUserFromRequest(req);
-  // if (!user)
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  try {
-    // requireRole(user, ["TEACHER", "ADMIN"]);
-    const body = await req.json();
-    const id = Number(params.id);
-    const existing = await prisma.result.findUnique({ where: { id } });
-    if (!existing)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const init: RequestInit = {
+    method,
+    headers: getApiHeaders(req),
+  };
 
-    // Teachers can edit all but headmaster comment (we store headmaster comment in a different field)
-    const updated = await prisma.result.update({
-      where: { id },
-      data: {
-        continuous: body.continuous ?? existing.continuous,
-        summary: body.summary ?? existing.summary,
-        total:
-          (body.continuous ?? existing.continuous) +
-          (body.summary ?? existing.summary),
-        comments: body.comments ?? existing.comments,
-      },
-    });
-    return NextResponse.json({ updated });
-  } catch (err: any) {
+  if (method === "PUT") {
+    const body = await req.json();
+    init.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(buildResultDetailUrl(id), init);
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
     return NextResponse.json(
-      { error: err.message || "Error" },
-      { status: 400 }
+      { error: payload?.message || "Result request failed", details: payload },
+      { status: response.status }
     );
   }
+
+  return NextResponse.json(payload, {
+    status: method === "DELETE" ? 200 : response.status,
+  });
 }
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
-  // const user = await getUserFromRequest(req);
-  // if (!user)
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   try {
-    const id = Number(params.id);
-    const result = await prisma.result.findUnique({
-      where: { id },
-      include: {
-        student: true,
-        subject: true,
-        teacher: { select: { name: true } },
-      },
-    });
-
-    if (!result)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-    return NextResponse.json({ result });
-  } catch (err: any) {
+    return await proxyRequest(req, "GET", params.id);
+  } catch (error: any) {
+    console.error("[Results][GET:id] Error:", error);
     return NextResponse.json(
-      { error: err.message || "Error" },
-      { status: 400 }
+      { error: error.message || "Unable to fetch result" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    return await proxyRequest(req, "PUT", params.id);
+  } catch (error: any) {
+    console.error("[Results][PUT:id] Error:", error);
+    return NextResponse.json(
+      { error: error.message || "Unable to update result" },
+      { status: 500 }
     );
   }
 }
@@ -75,28 +70,13 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  // TEMPORARILY COMMENTED OUT FOR DEVELOPMENT - Authorization checks disabled
-  // const user = await getUserFromRequest(req);
-  // if (!user)
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   try {
-    // requireRole(user, ["TEACHER", "ADMIN"]);
-    const id = Number(params.id);
-
-    const existing = await prisma.result.findUnique({ where: { id } });
-    if (!existing)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-    await prisma.result.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ message: "Result deleted successfully" });
-  } catch (err: any) {
+    return await proxyRequest(req, "DELETE", params.id);
+  } catch (error: any) {
+    console.error("[Results][DELETE:id] Error:", error);
     return NextResponse.json(
-      { error: err.message || "Error" },
-      { status: 400 }
+      { error: error.message || "Unable to delete result" },
+      { status: 500 }
     );
   }
 }

@@ -107,16 +107,31 @@ export default function AddResultPage() {
 
   return (
     <div className={styles.container}>
-      <Protected allowed={["ADMIN", "TEACHER"]} userRole={role}>
-        <ResultForm
-          onSave={handleSave}
-          onCancel={handleCancel}
-          students={students}
-          subjects={subjects}
-          terms={terms}
-          isEditing={false}
-        />
-      </Protected>
+      <div className={styles.page}>
+        <div className={styles.pageHeader}>
+          <div className={styles.pageTitleGroup}>
+            <span className={styles.headerAccent}>
+              <span className={styles.headerAccentDot} />
+              Create Result
+            </span>
+            <h1 className={styles.pageTitle}>Add New Student Result</h1>
+            <p className={styles.pageSubtitle}>
+              Capture a student&apos;s continuous assessment and exam scores for a specific term.
+            </p>
+          </div>
+        </div>
+
+        <Protected allowed={["ADMIN", "TEACHER"]} userRole={role}>
+          <ResultForm
+            onSave={handleSave}
+            onCancel={handleCancel}
+            students={students}
+            subjects={subjects}
+            terms={terms}
+            isEditing={false}
+          />
+        </Protected>
+      </div>
     </div>
   );
 }

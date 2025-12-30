@@ -1,23 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { getApiHeaders } from "@/lib/api-utils";
+import { buildExternalApiUrl } from "@/lib/external-api";
 
 export async function GET(req: NextRequest) {
-  const user = await getUserFromRequest(req);
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   try {
-    const subjects = await prisma.subject.findMany({
-      orderBy: { name: "asc" },
+    const response = await fetch(buildExternalApiUrl("/subject"), {
+      method: "GET",
+      headers: getApiHeaders(req),
+      cache: "no-store",
     });
 
-    return NextResponse.json({ subjects });
-  } catch (err: any) {
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: payload?.message || "Failed to fetch subjects", details: payload },
+        { status: response.status }
+      );
+    }
+
+    const raw =
+      Array.isArray(payload?.data) || Array.isArray(payload?.subjects)
+        ? payload.data || payload.subjects
+        : Array.isArray(payload)
+        ? payload
+        : [];
+
+    return NextResponse.json({ subjects: raw });
+  } catch (error: any) {
+    console.error("[Subjects][GET] Error:", error);
     return NextResponse.json(
-      { error: err.message || "Error" },
-      { status: 400 }
+      { error: error.message || "Unable to fetch subjects" },
+      { status: 500 }
     );
   }
 }
-

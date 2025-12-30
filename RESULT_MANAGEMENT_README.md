@@ -198,7 +198,15 @@ The system uses CSS modules for styling:
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/school_management"
 JWT_SECRET="your-super-secret-jwt-key"
+RESULT_API_BASE_URL="https://ui-staff-school-backend.onrender.com"
+NEXT_PUBLIC_ATTENDANCE_SUMMARY_STUDENT_ID="STU-0001"
+NEXT_PUBLIC_ATTENDANCE_SUMMARY_TERM_ID="TERM-0001"
 ```
+
+- `RESULT_API_BASE_URL` points to the Render-hosted backend that now serves
+  sessions, attendance, and result data.
+- `NEXT_PUBLIC_ATTENDANCE_SUMMARY_STUDENT_ID` / `TERM_ID` control the defaults
+  used by the dashboard attendance chart when fetching live summaries.
 
 ## Deployment
 

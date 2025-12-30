@@ -3,8 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import InputField from "../InputField";
 import Image from "next/image";
+
+const religionOptions = ["Christian", "Muslim", "Other"] as const;
+const qualificationOptions = ["Diploma", "BEd", "MEd", "PhD", "BSc", "Other"] as const;
 
 const schema = z.object({
   staffId: z.string().min(1, { message: "Staff ID is required!" }),
@@ -12,15 +14,25 @@ const schema = z.object({
   lastName: z.string().min(1, { message: "Last name is required!" }),
   dateOfBirth: z.string().min(1, { message: "Date of birth is required!" }),
   gender: z.string().min(1, { message: "Gender is required!" }),
-  religion: z.string().min(1, { message: "Religion is required!" }),
-  phoneNumber: z.string().min(1, { message: "Phone number is required!" }),
+  religion: z.enum(religionOptions, {
+    message:
+      "Religion must be one of the following values: Christian, Muslim, Other",
+  }),
+  phoneNumber: z
+    .string()
+    .regex(/^0\d{10}$/, {
+      message: "Phone number must follow 08121007480 (11 digits, starts with 0)",
+    }),
   email: z.string().email({ message: "Invalid email address!" }),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters long!" }),
   address: z.string().min(1, { message: "Address is required!" }),
   role: z.string().min(1, { message: "Role is required!" }),
-  qualification: z.string().min(1, { message: "Qualification is required!" }),
+  qualification: z.enum(qualificationOptions, {
+    message:
+      "Qualification must be one of the following values: Diploma, BEd, MEd, PhD, BSc, Other",
+  }),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -212,7 +224,7 @@ const TeacherForm = ({
                 {...register("phoneNumber")}
                 defaultValue={data?.phoneNumber}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                placeholder="+1 (555) 123-4567"
+                placeholder="08121007480"
               />
               {errors.phoneNumber && (
                 <p className="text-sm text-red-500 mt-1">
@@ -277,12 +289,18 @@ const TeacherForm = ({
               <label className="block text-sm font-medium text-gray-700">
                 Religion <span className="text-red-500">*</span>
               </label>
-              <input
+              <select
                 {...register("religion")}
-                defaultValue={data?.religion}
+                defaultValue={data?.religion || ""}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter religion"
-              />
+              >
+                <option value="">Select religion</option>
+                {religionOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               {errors.religion && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.religion.message}
@@ -328,12 +346,18 @@ const TeacherForm = ({
               <label className="block text-sm font-medium text-gray-700">
                 Qualification <span className="text-red-500">*</span>
               </label>
-              <input
+              <select
                 {...register("qualification")}
-                defaultValue={data?.qualification}
+                defaultValue={data?.qualification || ""}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
-                placeholder="e.g., Masters in Education"
-              />
+              >
+                <option value="">Select qualification</option>
+                {qualificationOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               {errors.qualification && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.qualification.message}
