@@ -71,6 +71,8 @@ function normalizeTerms(sessionsPayload: any): RawTerm[] {
   return collectedTerms;
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     const response = await fetch(buildExternalApiUrl("/session"), {
