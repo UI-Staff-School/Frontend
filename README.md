@@ -1,5 +1,7 @@
 # Lama Dev School Management Dashboard
 
+> Last updated: $(date)
+
 ## Getting Started
 
 First, run the development server:
