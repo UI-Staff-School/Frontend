@@ -10,6 +10,7 @@ type RawTerm = {
   term?: string;
   year?: string;
   academicYear?: string;
+  sessionId?: number | string;
 };
 
 type RawSession = {
@@ -69,6 +70,8 @@ function normalizeTerms(sessionsPayload: any): RawTerm[] {
 
   return collectedTerms;
 }
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {

@@ -4,6 +4,8 @@ import { getApiHeaders } from "@/lib/api-utils";
 
 const API_BASE_URL = "https://ui-staff-school-backend.onrender.com";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     // Log cookies for debugging
