@@ -10,6 +10,7 @@ type RawTerm = {
   term?: string;
   year?: string;
   academicYear?: string;
+  sessionId?: number | string;
 };
 
 type RawSession = {
