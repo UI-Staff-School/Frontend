@@ -570,7 +570,7 @@ const ClassArmForm = ({
                           This usually means:
                         </p>
                         <ul className="text-xs mt-1 list-disc list-inside space-y-1">
-                          <li>The backend isn't returning ID fields in the response</li>
+                          <li>The backend isn&apos;t returning ID fields in the response</li>
                           <li>Class levels were created before IDs were properly configured</li>
                           <li>The ID field has a different name (check console logs)</li>
                         </ul>
