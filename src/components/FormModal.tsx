@@ -24,6 +24,15 @@ const ClassLevelForm = dynamic(() => import("./forms/ClassLevelForm"), {
 const ClassArmForm = dynamic(() => import("./forms/ClassArmForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const ParentForm = dynamic(() => import("./forms/ParentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const SessionForm = dynamic(() => import("./forms/SessionForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const FeeForm = dynamic(() => import("./forms/FeeForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
   [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
@@ -33,6 +42,9 @@ const forms: {
   subject: (type, data) => <SubjectForm type={type} data={data} />,
   classLevel: (type, data) => <ClassLevelForm type={type} data={data} />,
   classArm: (type, data) => <ClassArmForm type={type} data={data} />,
+  parent: (type, data) => <ParentForm type={type} data={data} />,
+  session: (type, data) => <SessionForm type={type} data={data} />,
+  fee: (type, data) => <FeeForm type={type} data={data} />,
 };
 
 const FormModal = ({
@@ -55,7 +67,9 @@ const FormModal = ({
     | "result"
     | "attendance"
     | "event"
-    | "announcement";
+    | "announcement"
+    | "session"
+    | "fee";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
@@ -103,6 +117,24 @@ const FormModal = ({
         title: "Delete Class Arm",
         message:
           "Are you sure you want to delete this class arm? This action cannot be undone and all associated data will be permanently removed.",
+      },
+      parent: {
+        endpoint: `/api/parent/${id}`,
+        title: "Delete Parent",
+        message:
+          "Are you sure you want to delete this parent? This action cannot be undone and all linked student relationships will be removed.",
+      },
+      session: {
+        endpoint: `/api/session/${id}`,
+        title: "Delete Session",
+        message:
+          "Are you sure you want to delete this session? This action cannot be undone and all associated terms and data will be permanently removed.",
+      },
+      fee: {
+        endpoint: `/api/payment/fee/${id}`,
+        title: "Delete Fee",
+        message:
+          "Are you sure you want to delete this fee? This action cannot be undone.",
       },
     };
 

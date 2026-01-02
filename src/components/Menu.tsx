@@ -15,6 +15,30 @@ const menuItems = [
       //   visible: ["admin", "teacher", "student", "parent"],
       // },
       {
+        icon: "/home.png",
+        label: "Dashboard",
+        href: "/student",
+        visible: ["student"],
+      },
+      {
+        icon: "/result.png",
+        label: "My Results",
+        href: "/student/results",
+        visible: ["student"],
+      },
+      {
+        icon: "/attendance.png",
+        label: "My Attendance",
+        href: "/student/attendance",
+        visible: ["student"],
+      },
+      {
+        icon: "/finance.png",
+        label: "My Fees",
+        href: "/student/fees",
+        visible: ["student"],
+      },
+      {
         icon: "/teacher.png",
         label: "Teachers",
         href: "/list/teachers",
@@ -30,7 +54,13 @@ const menuItems = [
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",
-        visible: [],
+        visible: ["admin"],
+      },
+      {
+        icon: "/student.png",
+        label: "My Children",
+        href: "/parent/children",
+        visible: ["parent"],
       },
       {
         icon: "/subject.png",
@@ -43,6 +73,30 @@ const menuItems = [
         label: "Classes",
         href: "/list/classes",
         visible: ["admin", "teacher"],
+      },
+      {
+        icon: "/calendar.png",
+        label: "Sessions",
+        href: "/list/sessions",
+        visible: ["admin"],
+      },
+      {
+        icon: "/student.png",
+        label: "Alumni",
+        href: "/list/alumni",
+        visible: ["admin"],
+      },
+      {
+        icon: "/finance.png",
+        label: "Fees",
+        href: "/list/fees",
+        visible: ["admin"],
+      },
+      {
+        icon: "/finance.png",
+        label: "Payments",
+        href: "/list/payments",
+        visible: ["admin"],
       },
       {
         icon: "/lesson.png",
@@ -67,6 +121,12 @@ const menuItems = [
         label: "Results",
         href: "/list/results",
         visible: ["admin", "teacher", "student", "parent"],
+      },
+      {
+        icon: "/result.png",
+        label: "Class Rankings",
+        href: "/list/results/rankings",
+        visible: ["admin", "teacher"],
       },
       {
         icon: "/attendance.png",
