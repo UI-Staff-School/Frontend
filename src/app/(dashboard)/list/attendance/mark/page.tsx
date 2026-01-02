@@ -28,8 +28,8 @@ interface Student {
 }
 
 interface AttendanceRecord {
-  studentId: string | number;
-  status: "present" | "absent" | "late" | "excused";
+  studentId: string;
+  status: "Present" | "Absent" | "Late" | "Excused";
 }
 
 const MarkAttendancePage = () => {
@@ -111,8 +111,8 @@ const MarkAttendancePage = () => {
       // Initialize attendance records with all students as present
       setAttendanceRecords(
         studentsList.map((student: Student) => ({
-          studentId: student.id,
-          status: "present" as const,
+          studentId: student.admissionNo,
+          status: "Present" as const,
         }))
       );
     } catch (err: any) {
@@ -126,10 +126,10 @@ const MarkAttendancePage = () => {
   };
 
   // Update individual student status
-  const handleStatusChange = (studentId: string | number, status: AttendanceRecord["status"]) => {
+  const handleStatusChange = (admissionNo: string, status: AttendanceRecord["status"]) => {
     setAttendanceRecords((prev) =>
       prev.map((record) =>
-        record.studentId === studentId ? { ...record, status } : record
+        record.studentId === admissionNo ? { ...record, status } : record
       )
     );
   };
@@ -137,13 +137,13 @@ const MarkAttendancePage = () => {
   // Bulk actions
   const handleMarkAllPresent = () => {
     setAttendanceRecords((prev) =>
-      prev.map((record) => ({ ...record, status: "present" as const }))
+      prev.map((record) => ({ ...record, status: "Present" as const }))
     );
   };
 
   const handleMarkAllAbsent = () => {
     setAttendanceRecords((prev) =>
-      prev.map((record) => ({ ...record, status: "absent" as const }))
+      prev.map((record) => ({ ...record, status: "Absent" as const }))
     );
   };
 
@@ -168,7 +168,7 @@ const MarkAttendancePage = () => {
         classArmId: Number(classArmId),
         termId: Number(termId),
         date,
-        records: attendanceRecords.map((record) => ({
+        attendance: attendanceRecords.map((record) => ({
           studentId: record.studentId,
           status: record.status,
         })),
@@ -202,13 +202,13 @@ const MarkAttendancePage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "present":
+      case "Present":
         return "bg-green-100 text-green-700 border-green-200";
-      case "absent":
+      case "Absent":
         return "bg-red-100 text-red-700 border-red-200";
-      case "late":
+      case "Late":
         return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      case "excused":
+      case "Excused":
         return "bg-blue-100 text-blue-700 border-blue-200";
       default:
         return "bg-gray-100 text-gray-700 border-gray-200";
@@ -216,10 +216,10 @@ const MarkAttendancePage = () => {
   };
 
   // Stats
-  const presentCount = attendanceRecords.filter((r) => r.status === "present").length;
-  const absentCount = attendanceRecords.filter((r) => r.status === "absent").length;
-  const lateCount = attendanceRecords.filter((r) => r.status === "late").length;
-  const excusedCount = attendanceRecords.filter((r) => r.status === "excused").length;
+  const presentCount = attendanceRecords.filter((r) => r.status === "Present").length;
+  const absentCount = attendanceRecords.filter((r) => r.status === "Absent").length;
+  const lateCount = attendanceRecords.filter((r) => r.status === "Late").length;
+  const excusedCount = attendanceRecords.filter((r) => r.status === "Excused").length;
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -366,9 +366,9 @@ const MarkAttendancePage = () => {
               <tbody className="divide-y divide-gray-100">
                 {students.map((student, index) => {
                   const record = attendanceRecords.find(
-                    (r) => r.studentId === student.id
+                    (r) => r.studentId === student.admissionNo
                   );
-                  const currentStatus = record?.status || "present";
+                  const currentStatus = record?.status || "Present";
 
                   return (
                     <tr key={student.id} className="hover:bg-gray-50">
@@ -391,7 +391,7 @@ const MarkAttendancePage = () => {
                           value={currentStatus}
                           onChange={(e) =>
                             handleStatusChange(
-                              student.id,
+                              student.admissionNo,
                               e.target.value as AttendanceRecord["status"]
                             )
                           }
@@ -399,10 +399,10 @@ const MarkAttendancePage = () => {
                             currentStatus
                           )}`}
                         >
-                          <option value="present">Present</option>
-                          <option value="absent">Absent</option>
-                          <option value="late">Late</option>
-                          <option value="excused">Excused</option>
+                          <option value="Present">Present</option>
+                          <option value="Absent">Absent</option>
+                          <option value="Late">Late</option>
+                          <option value="Excused">Excused</option>
                         </select>
                       </td>
                     </tr>

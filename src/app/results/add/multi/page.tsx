@@ -7,12 +7,17 @@ import Protected from "@/components/Protected";
 
 type Student = {
   id: number;
-  matric: string;
+  admissionNo?: string;
+  matric?: string;
   surname: string;
   firstname: string;
   othername?: string;
-  className: string;
+  className?: string;
   classArmId?: number;
+  classArm?: {
+    id: number;
+    name: string;
+  };
 };
 
 type Subject = {
@@ -24,15 +29,19 @@ type Subject = {
 type Term = {
   id: number;
   name: string;
-  year: string;
+  year?: string;
+  session?: {
+    id: number;
+    name: string;
+  };
 };
 
 type SubjectScore = {
   subjectId: number;
   subjectName: string;
-  continuous: number | string;
-  summary: number | string;
-  comments: string;
+  testScore: number | string;
+  examScore: number | string;
+  remark: string;
 };
 
 export default function MultiSubjectResultPage() {
@@ -49,6 +58,12 @@ export default function MultiSubjectResultPage() {
   const [selectedStudent, setSelectedStudent] = useState<string>("");
   const [selectedTerm, setSelectedTerm] = useState<string>("");
   const [scores, setScores] = useState<SubjectScore[]>([]);
+
+  // Get selected student data to extract classArmId
+  const selectedStudentData = students.find(
+    (s) => String(s.admissionNo || s.matric || s.id) === selectedStudent
+  );
+  const classArmId = selectedStudentData?.classArmId || selectedStudentData?.classArm?.id;
 
   useEffect(() => {
     async function fetchData() {
@@ -78,9 +93,9 @@ export default function MultiSubjectResultPage() {
             subjectList.map((s: Subject) => ({
               subjectId: s.id,
               subjectName: s.name,
-              continuous: "",
-              summary: "",
-              comments: "",
+              testScore: "",
+              examScore: "",
+              remark: "",
             }))
           );
         }
@@ -100,7 +115,7 @@ export default function MultiSubjectResultPage() {
 
   const updateScore = (
     subjectId: number,
-    field: "continuous" | "summary" | "comments",
+    field: "testScore" | "examScore" | "remark",
     value: string | number
   ) => {
     setScores((prev) =>
@@ -110,18 +125,28 @@ export default function MultiSubjectResultPage() {
     );
   };
 
-  const getTotal = (continuous: number | string, summary: number | string) => {
-    const c = Number(continuous) || 0;
-    const s = Number(summary) || 0;
-    return c + s;
+  const getTotal = (testScore: number | string, examScore: number | string) => {
+    const t = Number(testScore) || 0;
+    const e = Number(examScore) || 0;
+    return t + e;
   };
 
   const getGrade = (total: number) => {
-    if (total >= 70) return { grade: "A", color: "text-green-600" };
-    if (total >= 60) return { grade: "B", color: "text-blue-600" };
-    if (total >= 50) return { grade: "C", color: "text-yellow-600" };
-    if (total >= 40) return { grade: "D", color: "text-orange-600" };
-    return { grade: "F", color: "text-red-600" };
+    if (total >= 70) return { grade: "A", color: "text-green-600", remark: "Excellent" };
+    if (total >= 60) return { grade: "B", color: "text-blue-600", remark: "Very Good" };
+    if (total >= 50) return { grade: "C", color: "text-yellow-600", remark: "Good" };
+    if (total >= 40) return { grade: "D", color: "text-orange-600", remark: "Fair" };
+    return { grade: "F", color: "text-red-600", remark: "Poor" };
+  };
+
+  // Auto-fill remark based on total score
+  const autoFillRemark = (subjectId: number) => {
+    const score = scores.find((s) => s.subjectId === subjectId);
+    if (score && !score.remark) {
+      const total = getTotal(score.testScore, score.examScore);
+      const { remark } = getGrade(total);
+      updateScore(subjectId, "remark", remark);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,9 +159,14 @@ export default function MultiSubjectResultPage() {
       return;
     }
 
+    if (!classArmId) {
+      setError("Could not determine student's class. Please try again.");
+      return;
+    }
+
     // Filter out subjects with no scores entered
     const filledScores = scores.filter(
-      (s) => s.continuous !== "" || s.summary !== ""
+      (s) => s.testScore !== "" || s.examScore !== ""
     );
 
     if (filledScores.length === 0) {
@@ -144,16 +174,20 @@ export default function MultiSubjectResultPage() {
       return;
     }
 
-    // Validate scores
+    // Validate scores and remarks
     for (const score of filledScores) {
-      const ca = Number(score.continuous) || 0;
-      const exam = Number(score.summary) || 0;
-      if (ca < 0 || ca > 30) {
-        setError(`CA score for ${score.subjectName} must be between 0 and 30`);
+      const test = Number(score.testScore) || 0;
+      const exam = Number(score.examScore) || 0;
+      if (test < 0 || test > 40) {
+        setError(`Test score for ${score.subjectName} must be between 0 and 40`);
         return;
       }
-      if (exam < 0 || exam > 70) {
-        setError(`Exam score for ${score.subjectName} must be between 0 and 70`);
+      if (exam < 0 || exam > 60) {
+        setError(`Exam score for ${score.subjectName} must be between 0 and 60`);
+        return;
+      }
+      if (!score.remark.trim()) {
+        setError(`Remark is required for ${score.subjectName}`);
         return;
       }
     }
@@ -162,13 +196,14 @@ export default function MultiSubjectResultPage() {
       setSubmitting(true);
 
       const payload = {
-        studentId: Number(selectedStudent),
+        studentId: String(selectedStudent),
         termId: Number(selectedTerm),
-        results: filledScores.map((s) => ({
+        classArmId: Number(classArmId),
+        subjects: filledScores.map((s) => ({
           subjectId: s.subjectId,
-          continuous: Number(s.continuous) || 0,
-          summary: Number(s.summary) || 0,
-          comments: s.comments || "",
+          testScore: Number(s.testScore) || 0,
+          examScore: Number(s.examScore) || 0,
+          remark: s.remark.trim(),
         })),
       };
 
@@ -191,9 +226,9 @@ export default function MultiSubjectResultPage() {
         subjects.map((s) => ({
           subjectId: s.id,
           subjectName: s.name,
-          continuous: "",
-          summary: "",
-          comments: "",
+          testScore: "",
+          examScore: "",
+          remark: "",
         }))
       );
 
@@ -209,7 +244,7 @@ export default function MultiSubjectResultPage() {
   };
 
   const filledCount = scores.filter(
-    (s) => s.continuous !== "" || s.summary !== ""
+    (s) => s.testScore !== "" || s.examScore !== ""
   ).length;
 
   if (loading) {
@@ -265,12 +300,20 @@ export default function MultiSubjectResultPage() {
                   required
                 >
                   <option value="">Select a student...</option>
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.surname} {student.firstname} {student.othername || ""} - {student.className}
-                    </option>
-                  ))}
+                  {students.map((student) => {
+                    const studentKey = student.admissionNo || student.matric || String(student.id);
+                    return (
+                      <option key={student.id} value={studentKey}>
+                        {student.surname} {student.firstname} {student.othername || ""} - {student.className || student.classArm?.name || "N/A"}
+                      </option>
+                    );
+                  })}
                 </select>
+                {selectedStudentData && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Class: {selectedStudentData.className || selectedStudentData.classArm?.name || "N/A"}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -285,7 +328,7 @@ export default function MultiSubjectResultPage() {
                   <option value="">Select a term...</option>
                   {terms.map((term) => (
                     <option key={term.id} value={term.id}>
-                      {term.name} - {term.year}
+                      {term.name} {term.session?.name ? `- ${term.session.name}` : term.year ? `- ${term.year}` : ""}
                     </option>
                   ))}
                 </select>
@@ -312,10 +355,10 @@ export default function MultiSubjectResultPage() {
                       Subject
                     </th>
                     <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 w-28">
-                      CA (0-30)
+                      Test (0-40)
                     </th>
                     <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 w-28">
-                      Exam (0-70)
+                      Exam (0-60)
                     </th>
                     <th className="px-4 py-3 text-center text-sm font-medium text-gray-600 w-20">
                       Total
@@ -324,15 +367,15 @@ export default function MultiSubjectResultPage() {
                       Grade
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                      Comments
+                      Remark *
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {scores.map((score, index) => {
-                    const total = getTotal(score.continuous, score.summary);
+                    const total = getTotal(score.testScore, score.examScore);
                     const { grade, color } = getGrade(total);
-                    const hasValue = score.continuous !== "" || score.summary !== "";
+                    const hasValue = score.testScore !== "" || score.examScore !== "";
 
                     return (
                       <tr
@@ -350,11 +393,12 @@ export default function MultiSubjectResultPage() {
                           <input
                             type="number"
                             min="0"
-                            max="30"
-                            value={score.continuous}
+                            max="40"
+                            value={score.testScore}
                             onChange={(e) =>
-                              updateScore(score.subjectId, "continuous", e.target.value)
+                              updateScore(score.subjectId, "testScore", e.target.value)
                             }
+                            onBlur={() => autoFillRemark(score.subjectId)}
                             placeholder="0"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                           />
@@ -363,11 +407,12 @@ export default function MultiSubjectResultPage() {
                           <input
                             type="number"
                             min="0"
-                            max="70"
-                            value={score.summary}
+                            max="60"
+                            value={score.examScore}
                             onChange={(e) =>
-                              updateScore(score.subjectId, "summary", e.target.value)
+                              updateScore(score.subjectId, "examScore", e.target.value)
                             }
+                            onBlur={() => autoFillRemark(score.subjectId)}
                             placeholder="0"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                           />
@@ -385,11 +430,11 @@ export default function MultiSubjectResultPage() {
                         <td className="px-4 py-3">
                           <input
                             type="text"
-                            value={score.comments}
+                            value={score.remark}
                             onChange={(e) =>
-                              updateScore(score.subjectId, "comments", e.target.value)
+                              updateScore(score.subjectId, "remark", e.target.value)
                             }
-                            placeholder="Optional..."
+                            placeholder="Required..."
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                           />
                         </td>

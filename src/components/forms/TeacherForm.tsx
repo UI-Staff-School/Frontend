@@ -115,13 +115,29 @@ const TeacherForm = ({
       const url = type === "create" ? "/api/staff" : `/api/staff/${data?.id}`;
       const method = type === "create" ? "POST" : "PUT";
 
+      // Build payload matching API schema (exclude confirmPassword)
+      const payload = {
+        staffId: formData.staffId,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
+        gender: formData.gender,
+        religion: formData.religion,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        password: formData.password,
+        address: formData.address,
+        role: formData.role,
+        qualification: formData.qualification,
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

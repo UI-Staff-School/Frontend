@@ -5,11 +5,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useState, useEffect } from "react";
 
-const relationshipOptions = ["Father", "Mother", "Guardian", "Other"] as const;
+const parentRoleOptions = ["Father", "Mother", "Guardian"] as const;
+const religionOptions = ["Christian", "Muslim", "Other"] as const;
 
 const schema = z.object({
-  firstName: z.string().min(1, { message: "First name is required!" }),
-  lastName: z.string().min(1, { message: "Last name is required!" }),
+  fullName: z.string().min(1, { message: "Full name is required!" }),
+  parentRole: z.enum(parentRoleOptions, {
+    message: "Parent role must be one of: Father, Mother, Guardian",
+  }),
+  religion: z.enum(religionOptions, {
+    message: "Religion must be one of: Christian, Muslim, Other",
+  }),
   email: z
     .string()
     .email({ message: "Invalid email address!" })
@@ -23,10 +29,7 @@ const schema = z.object({
     .string()
     .min(10, { message: "Address should be at least 10 characters long" })
     .max(200, { message: "Address should not exceed 200 characters" }),
-  occupation: z.string().optional(),
-  relationship: z.enum(relationshipOptions, {
-    message: "Relationship must be one of: Father, Mother, Guardian, Other",
-  }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).optional(),
 });
 
 type Inputs = z.infer<typeof schema>;
@@ -129,11 +132,20 @@ const ParentForm = ({
       const url = type === "create" ? "/api/parent" : `/api/parent/${data?.id}`;
       const method = type === "create" ? "POST" : "PUT";
 
-      // Include linked students in the payload
-      const payload = {
-        ...formData,
-        linkedStudents: linkedStudents.map((s) => s.admissionNo),
+      // Build payload matching API schema
+      const payload: any = {
+        fullName: formData.fullName,
+        parentRole: formData.parentRole,
+        religion: formData.religion,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        address: formData.address,
       };
+
+      // Only include password for create
+      if (type === "create" && formData.password) {
+        payload.password = formData.password;
+      }
 
       const response = await fetch(url, {
         method,
@@ -212,73 +224,67 @@ const ParentForm = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
+            <div className="md:col-span-2 space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                First Name <span className="text-red-500">*</span>
+                Full Name <span className="text-red-500">*</span>
               </label>
               <input
-                {...register("firstName")}
-                defaultValue={data?.firstName}
+                {...register("fullName")}
+                defaultValue={data?.fullName}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter first name"
+                placeholder="Enter full name"
               />
-              {errors.firstName && (
+              {errors.fullName && (
                 <p className="text-sm text-red-500 mt-1">
-                  {errors.firstName.message}
+                  {errors.fullName.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Last Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...register("lastName")}
-                defaultValue={data?.lastName}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter last name"
-              />
-              {errors.lastName && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.lastName.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Relationship <span className="text-red-500">*</span>
+                Role <span className="text-red-500">*</span>
               </label>
               <select
-                {...register("relationship")}
-                defaultValue={data?.relationship || ""}
+                {...register("parentRole")}
+                defaultValue={data?.parentRole || ""}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200"
               >
-                <option value="">Select relationship</option>
-                {relationshipOptions.map((option) => (
+                <option value="">Select role</option>
+                {parentRoleOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
                 ))}
               </select>
-              {errors.relationship && (
+              {errors.parentRole && (
                 <p className="text-sm text-red-500 mt-1">
-                  {errors.relationship.message}
+                  {errors.parentRole.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Occupation
+                Religion <span className="text-red-500">*</span>
               </label>
-              <input
-                {...register("occupation")}
-                defaultValue={data?.occupation}
+              <select
+                {...register("religion")}
+                defaultValue={data?.religion || ""}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter occupation (optional)"
-              />
+              >
+                <option value="">Select religion</option>
+                {religionOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              {errors.religion && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.religion.message}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -349,6 +355,40 @@ const ParentForm = ({
             </div>
           </div>
         </div>
+
+        {/* Password Section (only for create) */}
+        {type === "create" && (
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">🔒</span>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Account Security
+              </h2>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                {...register("password")}
+                type="password"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                placeholder="Enter password (min 6 characters)"
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+              <p className="text-xs text-gray-500">
+                This password will be used by the parent to log into the portal.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Link Students Section */}
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
