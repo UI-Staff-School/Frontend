@@ -71,7 +71,19 @@ export async function GET(req: NextRequest) {
         Array.isArray(data) ? data.length : "unknown"
       } students`
     );
-    return NextResponse.json(data);
+
+    // Handle nested data structure: { data: [...], meta: {...} }
+    if (data && data.data && Array.isArray(data.data)) {
+      return NextResponse.json(data.data);
+    }
+
+    // If it's already an array, return as is
+    if (Array.isArray(data)) {
+      return NextResponse.json(data);
+    }
+
+    // Fallback to empty array
+    return NextResponse.json([]);
   } catch (error: any) {
     console.error("Student API Error:", error);
 
@@ -143,4 +155,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

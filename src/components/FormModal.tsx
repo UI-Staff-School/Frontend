@@ -104,6 +104,12 @@ const FormModal = ({
         message:
           "Are you sure you want to delete this class arm? This action cannot be undone and all associated data will be permanently removed.",
       },
+      result: {
+        endpoint: `/api/results/${id}`,
+        title: "Delete Result",
+        message:
+          "Are you sure you want to delete this result? This action cannot be undone and all associated data will be permanently removed.",
+      },
     };
 
     return configs[table] || {
@@ -158,7 +164,7 @@ const FormModal = ({
                   }}
                   className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
                 >
-                  {getDeleteConfig().title}
+                  Delete
                 </button>
               </div>
             </>

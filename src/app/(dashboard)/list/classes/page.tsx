@@ -19,6 +19,10 @@ type ClassArm = {
   armName: string;
   classLevelId: number;
   teacherId: string;
+  classLevel?: {
+    id: number;
+    className: string;
+  };
 };
 
 const classLevelColumns = [
@@ -217,35 +221,43 @@ const ClassListPage = () => {
     </tr>
   );
 
-  const renderArmRow = (item: ClassArm) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        <div className="w-10 h-10 rounded-full bg-lamaYellow flex items-center justify-center">
-          <span className="text-sm font-medium text-gray-700">
-            {item.armName.charAt(0)}
-          </span>
-        </div>
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.armName}</h3>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.classLevelId}</td>
-      <td className="hidden md:table-cell">{item.teacherId}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          {role === "admin" && (
-            <>
-              <FormModal table="classArm" type="update" data={item} />
-              <FormModal table="classArm" type="delete" id={item.id} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
+  const renderArmRow = (item: ClassArm) => {
+    // Find the class level name from the classLevels array
+    const classLevel = classLevels.find(
+      (level) => String(level.id) === String(item.classLevelId) || level.id === item.classLevelId
+    );
+    const className = classLevel?.className || `Class Level ${item.classLevelId}`;
+    
+    return (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="flex items-center gap-4 p-4">
+          <div className="w-10 h-10 rounded-full bg-lamaYellow flex items-center justify-center">
+            <span className="text-sm font-medium text-gray-700">
+              {item.armName.charAt(0)}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <h3 className="font-semibold">{item.armName}</h3>
+          </div>
+        </td>
+        <td className="hidden md:table-cell">{className}</td>
+        <td className="hidden md:table-cell">{item.teacherId}</td>
+        <td>
+          <div className="flex items-center gap-2">
+            {role === "admin" && (
+              <>
+                <FormModal table="classArm" type="update" data={item} />
+                <FormModal table="classArm" type="delete" id={item.id} />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
 
   if (loading) {
     return (

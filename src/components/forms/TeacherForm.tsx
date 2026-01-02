@@ -15,85 +15,86 @@ const qualificationOptions = [
   "Other",
 ] as const;
 
-// Strong password rules: 8+ chars, upper, lower, number, special
+// Password rules: only letters and numbers (alphanumeric)
 const passwordSchema = z
   .string()
-  .min(8, { message: "Password must be at least 8 characters long!" })
-  .regex(/[A-Z]/, {
-    message: "Password must contain at least one uppercase letter",
-  })
-  .regex(/[a-z]/, {
-    message: "Password must contain at least one lowercase letter",
-  })
-  .regex(/[0-9]/, {
-    message: "Password must contain at least one number",
-  })
-  .regex(/[^A-Za-z0-9]/, {
-    message: "Password must contain at least one special character",
+  .min(1, { message: "Password is required!" })
+  .regex(/^[A-Za-z0-9]+$/, {
+    message: "Password must contain only letters and numbers",
   });
 
-const schema = z
-  .object({
-    staffId: z.string().min(1, { message: "Staff ID is required!" }),
-    firstName: z.string().min(1, { message: "First name is required!" }),
-    lastName: z.string().min(1, { message: "Last name is required!" }),
-    dateOfBirth: z
-      .string()
-      .min(1, { message: "Date of birth is required!" })
-      .refine((value) => {
-        const dob = new Date(value);
-        if (Number.isNaN(dob.getTime())) return false;
-        const today = new Date();
-        const minAgeDate = new Date(
-          today.getFullYear() - 18,
-          today.getMonth(),
-          today.getDate()
-        );
-        const maxAgeDate = new Date(
-          today.getFullYear() - 70,
-          today.getMonth(),
-          today.getDate()
-        );
-        // Staff must be between 18 and 70 years old
-        return dob <= minAgeDate && dob >= maxAgeDate;
-      }, {
-        message: "Staff must be between 18 and 70 years old",
-      }),
-    gender: z.string().min(1, { message: "Gender is required!" }),
-    religion: z.enum(religionOptions, {
+// Base schema without password fields
+const baseSchema = z.object({
+  staffId: z.string().min(1, { message: "Staff ID is required!" }),
+  firstName: z.string().min(1, { message: "First name is required!" }),
+  lastName: z.string().min(1, { message: "Last name is required!" }),
+  dateOfBirth: z
+    .string()
+    .min(1, { message: "Date of birth is required!" })
+    .refine((value) => {
+      const dob = new Date(value);
+      if (Number.isNaN(dob.getTime())) return false;
+      const today = new Date();
+      const minAgeDate = new Date(
+        today.getFullYear() - 18,
+        today.getMonth(),
+        today.getDate()
+      );
+      const maxAgeDate = new Date(
+        today.getFullYear() - 70,
+        today.getMonth(),
+        today.getDate()
+      );
+      // Staff must be between 18 and 70 years old
+      return dob <= minAgeDate && dob >= maxAgeDate;
+    }, {
+      message: "Staff must be between 18 and 70 years old",
+    }),
+  gender: z.string().min(1, { message: "Gender is required!" }),
+  religion: z.enum(religionOptions, {
+    message:
+      "Religion must be one of the following values: Christian, Muslim, Other",
+  }),
+  phoneNumber: z
+    .string()
+    .regex(/^0\d{10}$/, {
       message:
-        "Religion must be one of the following values: Christian, Muslim, Other",
+        "Phone number must follow 08121007480 format (11 digits, starts with 0)",
     }),
-    phoneNumber: z
-      .string()
-      .regex(/^0\d{10}$/, {
-        message:
-          "Phone number must follow 08121007480 format (11 digits, starts with 0)",
-      }),
-    email: z
-      .string()
-      .email({ message: "Invalid email address!" })
-      .max(100, { message: "Email is too long" }),
-    password: passwordSchema,
-    confirmPassword: z.string().min(1, {
-      message: "Confirm Password is required",
-    }),
-    address: z
-      .string()
-      .min(10, { message: "Address should be at least 10 characters long" })
-      .max(200, { message: "Address should not exceed 200 characters" }),
-    role: z.string().min(1, { message: "Role is required!" }),
-    qualification: z.enum(qualificationOptions, {
-      message:
-        "Qualification must be one of the following values: Diploma, BEd, MEd, PhD, BSc, Other",
-    }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+  email: z
+    .string()
+    .email({ message: "Invalid email address!" })
+    .max(100, { message: "Email is too long" }),
+  address: z
+    .string()
+    .min(10, { message: "Address should be at least 10 characters long" })
+    .max(200, { message: "Address should not exceed 200 characters" }),
+  role: z.string().min(1, { message: "Role is required!" }),
+  qualification: z.enum(qualificationOptions, {
+    message:
+      "Qualification must be one of the following values: Diploma, BEd, MEd, PhD, BSc, Other",
+  }),
+});
 
-type Inputs = z.infer<typeof schema>;
+// Schema for create (with password and confirmPassword)
+const createSchema = baseSchema.extend({
+  password: passwordSchema,
+  confirmPassword: z.string().min(1, {
+    message: "Confirm Password is required",
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+// Schema for update (password optional, no confirmPassword)
+const updateSchema = baseSchema.extend({
+  password: passwordSchema.optional(),
+});
+
+type CreateInputs = z.infer<typeof createSchema>;
+type UpdateInputs = z.infer<typeof updateSchema>;
+type Inputs = CreateInputs | UpdateInputs;
 
 const TeacherForm = ({
   type,
@@ -102,6 +103,7 @@ const TeacherForm = ({
   type: "create" | "update";
   data?: any;
 }) => {
+  const schema = type === "create" ? createSchema : updateSchema;
   const {
     register,
     handleSubmit,
@@ -115,13 +117,21 @@ const TeacherForm = ({
       const url = type === "create" ? "/api/staff" : `/api/staff/${data?.id}`;
       const method = type === "create" ? "POST" : "PUT";
 
+      // Remove confirmPassword from payload (backend doesn't accept it)
+      const { confirmPassword, ...payload } = formData as any;
+      
+      // For update, only include password if it's provided
+      if (type === "update" && !payload.password) {
+        delete payload.password;
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -439,13 +449,13 @@ const TeacherForm = ({
           <div className="max-w-md space-y-4">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Password <span className="text-red-500">*</span>
+                Password {type === "create" && <span className="text-red-500">*</span>}
               </label>
               <input
                 {...register("password")}
                 type="password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter secure password"
+                placeholder={type === "create" ? "Enter secure password" : "Enter new password (leave blank to keep current)"}
               />
               {errors.password && (
                 <p className="text-sm text-red-500 mt-1">
@@ -453,27 +463,33 @@ const TeacherForm = ({
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 8 characters and include uppercase,
-                lowercase, number, and special character.
+                Password must contain only letters and numbers (alphanumeric characters).
               </p>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...register("confirmPassword")}
-                type="password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
-                placeholder="Re-enter password"
-              />
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
+            {type === "create" && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Confirm Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  {...register("confirmPassword")}
+                  type="password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Re-enter password"
+                />
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.confirmPassword?.message}
+                  </p>
+                )}
+              </div>
+            )}
+            {type === "update" && (
+              <p className="text-xs text-gray-500 mt-1">
+                Leave password blank to keep the current password.
+              </p>
+            )}
           </div>
         </div>
 
