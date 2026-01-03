@@ -1,5 +1,4 @@
 import React from "react";
-import FormModal from "./FormModal";
 import styles from "@/styles/Result.module.css";
 
 export type ResultRow = {
@@ -89,8 +88,13 @@ export default function ResultTable({
                           Edit
                         </button>
                       )}
-                      {canEdit && (
-                        <FormModal table="result" type="delete" id={r.id} />
+                      {onDelete && canEdit && (
+                        <button
+                          className={`${styles.button} ${styles.buttonDanger}`}
+                          onClick={() => onDelete(r)}
+                        >
+                          Delete
+                        </button>
                       )}
                       {onHeadmasterComment && canAddHeadmasterComment && (
                         <button

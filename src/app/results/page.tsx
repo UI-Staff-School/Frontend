@@ -127,7 +127,23 @@ export default function ResultsPage() {
     window.location.href = `/results/edit/${result.id}`;
   };
 
-  // Delete is now handled by FormModal in ResultTable component
+  const handleDelete = async (result: ResultRow) => {
+    if (!confirm("Are you sure you want to delete this result?")) return;
+
+    try {
+      const response = await fetch(`/api/results/${result.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete result");
+      }
+
+      await handleFilter();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   const handleHeadmasterComment = (result: ResultRow) => {
     window.location.href = `/results/headmaster/${result.id}`;
@@ -222,6 +238,7 @@ export default function ResultsPage() {
             canEdit={role === "ADMIN" || role === "TEACHER"}
             canAddHeadmasterComment={role === "ADMIN"}
             onEdit={handleEdit}
+            onDelete={handleDelete}
             onHeadmasterComment={handleHeadmasterComment}
           />
         </Protected>

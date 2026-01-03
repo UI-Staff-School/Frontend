@@ -8,13 +8,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Student = {
+<<<<<<< HEAD
   id?: string;
+=======
+  id: string;
+>>>>>>> origin/habyaad_dev
   admissionNo: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
   gender: string;
   religion: string;
+<<<<<<< HEAD
   address?: string;
   classArmId: number;
   yearOfAdmission: string;
@@ -24,6 +29,11 @@ type Student = {
     classLevelId: number;
     teacherId?: string;
   };
+=======
+  address: string;
+  classArmId: number;
+  yearOfAdmission: string;
+>>>>>>> origin/habyaad_dev
 };
 
 const columns = [
@@ -148,7 +158,11 @@ const StudentListPage = () => {
 
   const renderRow = (item: Student) => (
     <tr
+<<<<<<< HEAD
       key={item.id || item.admissionNo}
+=======
+      key={item.id}
+>>>>>>> origin/habyaad_dev
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">
@@ -177,6 +191,7 @@ const StudentListPage = () => {
           {item.gender}
         </span>
       </td>
+<<<<<<< HEAD
       <td className="hidden md:table-cell">
         {item.classArm?.armName ? `Class ${item.classArm.armName}` : `Class ${item.classArmId}`}
       </td>
@@ -187,6 +202,16 @@ const StudentListPage = () => {
       <td>
         <div className="flex items-center gap-2">
           <Link href={`/list/students/${item.id || item.admissionNo}`}>
+=======
+      <td className="hidden md:table-cell">Class {item.classArmId}</td>
+      <td className="hidden md:table-cell">
+        {new Date(item.yearOfAdmission).getFullYear()}
+      </td>
+      <td className="hidden md:table-cell">{item.address}</td>
+      <td>
+        <div className="flex items-center gap-2">
+          <Link href={`/list/students/${item.id}`}>
+>>>>>>> origin/habyaad_dev
             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
@@ -194,7 +219,11 @@ const StudentListPage = () => {
           {role === "admin" && (
             <>
               <FormModal table="student" type="update" data={item} />
+<<<<<<< HEAD
               <FormModal table="student" type="delete" id={item.id || item.admissionNo} />
+=======
+              <FormModal table="student" type="delete" id={parseInt(item.id)} />
+>>>>>>> origin/habyaad_dev
             </>
           )}
         </div>

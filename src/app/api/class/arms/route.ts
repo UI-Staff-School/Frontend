@@ -20,20 +20,7 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await response.json();
-    
-    // If data is an array, return as is (it should already include classLevel info from backend)
-    // If data has a nested structure, extract the array
-    if (Array.isArray(data)) {
-      return NextResponse.json(data);
-    }
-    
-    // Handle nested response structure
-    if (data && Array.isArray(data.data)) {
-      return NextResponse.json(data.data);
-    }
-    
-    // Fallback to empty array
-    return NextResponse.json([]);
+    return NextResponse.json(data);
   } catch (error: any) {
     console.error("Class Arms API Error:", error);
     return NextResponse.json(

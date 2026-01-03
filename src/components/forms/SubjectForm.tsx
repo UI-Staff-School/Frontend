@@ -30,9 +30,7 @@ const SubjectForm = ({
 
   const onSubmit = handleSubmit(async (formData) => {
     try {
-      // Get the subject id - could be in data.id or data.subjectId
-      const subjectId = data?.id || data?.subjectId;
-      const url = type === "create" ? "/api/subject" : `/api/subject/${subjectId}`;
+      const url = type === "create" ? "/api/subject" : `/api/subject/${data?.id}`;
       const method = type === "create" ? "POST" : "PUT";
 
       const response = await fetch(url, {

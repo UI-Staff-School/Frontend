@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+<<<<<<< HEAD
+=======
+import Link from "next/link";
+>>>>>>> origin/habyaad_dev
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import Pagination from "@/components/Pagination";
@@ -180,6 +184,16 @@ const AttendancePage = () => {
             // onSearchChange={setSearch}
           />
           <div className="flex items-center gap-4 self-end">
+<<<<<<< HEAD
+=======
+            <Link
+              href="/list/attendance/mark"
+              className="px-4 py-2 bg-lamaPurple text-white text-sm font-medium rounded-md hover:bg-lamaPurpleLight transition flex items-center gap-2"
+            >
+              <span>+</span>
+              Mark Attendance
+            </Link>
+>>>>>>> origin/habyaad_dev
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/filter.png" alt="" width={14} height={14} />
             </button>
