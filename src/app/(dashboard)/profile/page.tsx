@@ -176,7 +176,8 @@ const ProfilePage = () => {
                     {getDisplayName()}
                   </h1>
                   <p className="text-sm text-gray-600 text-center sm:text-left mt-1">
-                    {profile.role} {profile.qualification && `- ${profile.qualification}`}
+                    {profile.role}{" "}
+                    {profile.qualification && `- ${profile.qualification}`}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
@@ -495,4 +496,3 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-

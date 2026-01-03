@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     // Clear all auth-related cookies
     response.cookies.delete("access_token");
     response.cookies.delete("token");
-    
+
     // Also set them to expire immediately
     response.cookies.set("access_token", "", {
       path: "/",
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       httpOnly: false,
       sameSite: "lax",
     });
-    
+
     response.cookies.set("token", "", {
       path: "/",
       expires: new Date(0),
@@ -38,4 +38,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

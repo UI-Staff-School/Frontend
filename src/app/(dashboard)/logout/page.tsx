@@ -31,7 +31,8 @@ const LogoutPage = () => {
       }
 
       // Clear cookies on client side as well
-      document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie =
+        "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
       // Clear localStorage
@@ -46,7 +47,8 @@ const LogoutPage = () => {
       setError(err.message || "Failed to sign out. Please try again.");
 
       // Even if API fails, try to clear cookies and redirect
-      document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie =
+        "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       localStorage.removeItem("userSettings");
 
@@ -94,9 +96,7 @@ const LogoutPage = () => {
 
         {!loggingOut && !error && (
           <div className="space-y-3">
-            <p className="text-green-600 text-sm">
-              ✓ Successfully signed out
-            </p>
+            <p className="text-green-600 text-sm">✓ Successfully signed out</p>
             <p className="text-gray-500 text-xs">
               Redirecting to sign in page...
             </p>
@@ -117,4 +117,3 @@ const LogoutPage = () => {
 };
 
 export default LogoutPage;
-

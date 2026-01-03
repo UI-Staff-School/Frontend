@@ -31,36 +31,37 @@ const baseSchema = z.object({
   dateOfBirth: z
     .string()
     .min(1, { message: "Date of birth is required!" })
-    .refine((value) => {
-      const dob = new Date(value);
-      if (Number.isNaN(dob.getTime())) return false;
-      const today = new Date();
-      const minAgeDate = new Date(
-        today.getFullYear() - 18,
-        today.getMonth(),
-        today.getDate()
-      );
-      const maxAgeDate = new Date(
-        today.getFullYear() - 70,
-        today.getMonth(),
-        today.getDate()
-      );
-      // Staff must be between 18 and 70 years old
-      return dob <= minAgeDate && dob >= maxAgeDate;
-    }, {
-      message: "Staff must be between 18 and 70 years old",
-    }),
+    .refine(
+      (value) => {
+        const dob = new Date(value);
+        if (Number.isNaN(dob.getTime())) return false;
+        const today = new Date();
+        const minAgeDate = new Date(
+          today.getFullYear() - 18,
+          today.getMonth(),
+          today.getDate()
+        );
+        const maxAgeDate = new Date(
+          today.getFullYear() - 70,
+          today.getMonth(),
+          today.getDate()
+        );
+        // Staff must be between 18 and 70 years old
+        return dob <= minAgeDate && dob >= maxAgeDate;
+      },
+      {
+        message: "Staff must be between 18 and 70 years old",
+      }
+    ),
   gender: z.string().min(1, { message: "Gender is required!" }),
   religion: z.enum(religionOptions, {
     message:
       "Religion must be one of the following values: Christian, Muslim, Other",
   }),
-  phoneNumber: z
-    .string()
-    .regex(/^0\d{10}$/, {
-      message:
-        "Phone number must follow 08121007480 format (11 digits, starts with 0)",
-    }),
+  phoneNumber: z.string().regex(/^0\d{10}$/, {
+    message:
+      "Phone number must follow 08121007480 format (11 digits, starts with 0)",
+  }),
   email: z
     .string()
     .email({ message: "Invalid email address!" })
@@ -77,15 +78,17 @@ const baseSchema = z.object({
 });
 
 // Schema for create (with password and confirmPassword)
-const createSchema = baseSchema.extend({
-  password: passwordSchema,
-  confirmPassword: z.string().min(1, {
-    message: "Confirm Password is required",
-  }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const createSchema = baseSchema
+  .extend({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, {
+      message: "Confirm Password is required",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 // Schema for update (password optional, no confirmPassword)
 const updateSchema = baseSchema.extend({
@@ -119,7 +122,7 @@ const TeacherForm = ({
 
       // Remove confirmPassword from payload (backend doesn't accept it)
       const { confirmPassword, ...payload } = formData as any;
-      
+
       // For update, only include password if it's provided
       if (type === "update" && !payload.password) {
         delete payload.password;
@@ -449,13 +452,18 @@ const TeacherForm = ({
           <div className="max-w-md space-y-4">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Password {type === "create" && <span className="text-red-500">*</span>}
+                Password{" "}
+                {type === "create" && <span className="text-red-500">*</span>}
               </label>
               <input
                 {...register("password")}
                 type="password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
-                placeholder={type === "create" ? "Enter secure password" : "Enter new password (leave blank to keep current)"}
+                placeholder={
+                  type === "create"
+                    ? "Enter secure password"
+                    : "Enter new password (leave blank to keep current)"
+                }
               />
               {errors.password && (
                 <p className="text-sm text-red-500 mt-1">
@@ -463,7 +471,8 @@ const TeacherForm = ({
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-                Password must contain only letters and numbers (alphanumeric characters).
+                Password must contain only letters and numbers (alphanumeric
+                characters).
               </p>
             </div>
 
@@ -478,11 +487,13 @@ const TeacherForm = ({
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
                   placeholder="Re-enter password"
                 />
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.confirmPassword?.message}
-                  </p>
-                )}
+                {type === "create" &&
+                  "confirmPassword" in errors &&
+                  errors.confirmPassword && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
               </div>
             )}
             {type === "update" && (

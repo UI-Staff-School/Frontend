@@ -19,13 +19,10 @@ type ClassArm = {
   armName: string;
   classLevelId: number;
   teacherId: string;
-<<<<<<< HEAD
   classLevel?: {
     id: number;
     className: string;
   };
-=======
->>>>>>> origin/habyaad_dev
 };
 
 const classLevelColumns = [
@@ -105,7 +102,9 @@ const ClassListPage = () => {
 
         // Normalize class levels to ensure consistent ID field
         if (Array.isArray(levelsData)) {
-          const { normalizeClassLevels } = await import("@/lib/class-level-utils");
+          const { normalizeClassLevels } = await import(
+            "@/lib/class-level-utils"
+          );
           levelsData = normalizeClassLevels(levelsData);
         }
 
@@ -216,7 +215,11 @@ const ClassListPage = () => {
           {role === "admin" && (
             <>
               <FormModal table="classLevel" type="update" data={item} />
-              <FormModal table="classLevel" type="delete" id={item.id} />
+              <FormModal
+                table="classLevel"
+                type="delete"
+                id={item.id || (item as any).classLevelId}
+              />
             </>
           )}
         </div>
@@ -224,14 +227,14 @@ const ClassListPage = () => {
     </tr>
   );
 
-<<<<<<< HEAD
   const renderArmRow = (item: ClassArm) => {
     // Find the class level name from the classLevels array
     const classLevel = classLevels.find(
-      (level) => String(level.id) === String(item.classLevelId) || level.id === item.classLevelId
+      (level) => String(level.id) === String(item.classLevelId)
     );
-    const className = classLevel?.className || `Class Level ${item.classLevelId}`;
-    
+    const className =
+      classLevel?.className || `Class Level ${item.classLevelId}`;
+
     return (
       <tr
         key={item.id}
@@ -254,7 +257,11 @@ const ClassListPage = () => {
             {role === "admin" && (
               <>
                 <FormModal table="classArm" type="update" data={item} />
-                <FormModal table="classArm" type="delete" id={item.id} />
+                <FormModal
+                  table="classArm"
+                  type="delete"
+                  id={item.id || (item as any).armId}
+                />
               </>
             )}
           </div>
@@ -262,37 +269,6 @@ const ClassListPage = () => {
       </tr>
     );
   };
-=======
-  const renderArmRow = (item: ClassArm) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        <div className="w-10 h-10 rounded-full bg-lamaYellow flex items-center justify-center">
-          <span className="text-sm font-medium text-gray-700">
-            {item.armName.charAt(0)}
-          </span>
-        </div>
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.armName}</h3>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.classLevelId}</td>
-      <td className="hidden md:table-cell">{item.teacherId}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          {role === "admin" && (
-            <>
-              <FormModal table="classArm" type="update" data={item} />
-              <FormModal table="classArm" type="delete" id={item.id} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
->>>>>>> origin/habyaad_dev
 
   if (loading) {
     return (

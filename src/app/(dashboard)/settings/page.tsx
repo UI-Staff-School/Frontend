@@ -89,7 +89,10 @@ const SettingsPage = () => {
     }
   };
 
-  const updateNotification = (key: keyof Settings["notifications"], value: boolean) => {
+  const updateNotification = (
+    key: keyof Settings["notifications"],
+    value: boolean
+  ) => {
     setSettings((prev) => ({
       ...prev,
       notifications: { ...prev.notifications, [key]: value },
@@ -183,9 +186,7 @@ const SettingsPage = () => {
               <input
                 type="checkbox"
                 checked={settings.notifications.email}
-                onChange={(e) =>
-                  updateNotification("email", e.target.checked)
-                }
+                onChange={(e) => updateNotification("email", e.target.checked)}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -332,7 +333,9 @@ const SettingsPage = () => {
 
         <div className="space-y-4">
           <div className="p-3 border border-gray-200 rounded-lg">
-            <label className="block mb-2 font-medium text-gray-900">Theme</label>
+            <label className="block mb-2 font-medium text-gray-900">
+              Theme
+            </label>
             <select
               value={settings.preferences.theme}
               onChange={(e) =>
@@ -448,4 +451,3 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
-
