@@ -1,9 +1,5 @@
 "use client";
 
-<<<<<<< HEAD
-import Image from "next/image";
-=======
->>>>>>> habyaad_dev
 import { useEffect, useState } from "react";
 import {
   RadialBarChart,
@@ -75,17 +71,6 @@ const CountChart = () => {
   return (
     <div className="w-full h-full flex flex-col">
       {/* TITLE */}
-<<<<<<< HEAD
-      <div className="flex justify-between items-center">
-        <h1 className="text-lg font-semibold">Students</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
-=======
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <h1 className="text-base font-semibold text-gray-900">Students by Gender</h1>
-          <p className="text-xs text-gray-500">Gender distribution</p>
-        </div>
->>>>>>> habyaad_dev
       </div>
 
       {loading ? (

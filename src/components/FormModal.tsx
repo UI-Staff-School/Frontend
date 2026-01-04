@@ -28,56 +28,6 @@ export type TableKey =
   | "lesson"
   | "session";
 
-<<<<<<< HEAD
-export type FormType = "create" | "update" | "delete";
-
-type FormComponent = (
-  type: "create" | "update",
-  data?: unknown
-) => ReactElement;
-
-type DeleteConfig = {
-  endpoint: (id: string | number) => string;
-  title: string;
-  message: string;
-=======
-const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-const StudentForm = dynamic(() => import("./forms/StudentForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-const ClassLevelForm = dynamic(() => import("./forms/ClassLevelForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-const ClassArmForm = dynamic(() => import("./forms/ClassArmForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-const ParentForm = dynamic(() => import("./forms/ParentForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-const SessionForm = dynamic(() => import("./forms/SessionForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-const FeeForm = dynamic(() => import("./forms/FeeForm"), {
-  loading: () => <h1>Loading...</h1>,
-});
-
-const forms: {
-  [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
-} = {
-  teacher: (type, data) => <TeacherForm type={type} data={data} />,
-  student: (type, data) => <StudentForm type={type} data={data} />,
-  subject: (type, data) => <SubjectForm type={type} data={data} />,
-  classLevel: (type, data) => <ClassLevelForm type={type} data={data} />,
-  classArm: (type, data) => <ClassArmForm type={type} data={data} />,
-  parent: (type, data) => <ParentForm type={type} data={data} />,
-  session: (type, data) => <SessionForm type={type} data={data} />,
-  fee: (type, data) => <FeeForm type={type} data={data} />,
->>>>>>> habyaad_dev
 };
 
 type TableConfig = {
@@ -233,103 +183,10 @@ const FormModal = ({
   type,
   data,
   id,
-<<<<<<< HEAD
-  onSuccess,
-  onError,
-}: FormModalProps) => {
-=======
-}: {
-  table:
-    | "teacher"
-    | "student"
-    | "parent"
-    | "subject"
-    | "class"
-    | "classLevel"
-    | "classArm"
-    | "lesson"
-    | "exam"
-    | "assignment"
-    | "result"
-    | "attendance"
-    | "event"
-    | "announcement"
-    | "session"
-    | "fee";
-  type: "create" | "update" | "delete";
-  data?: any;
-  id?: number | string;
-}) => {
-  const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
-  const bgColor =
-    type === "create"
-      ? "bg-lamaYellow"
-      : type === "update"
-      ? "bg-lamaSky"
-      : "bg-lamaPurple";
-
->>>>>>> habyaad_dev
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-<<<<<<< HEAD
-  const config = modalConfig[table];
-=======
-  const getDeleteConfig = () => {
-    const configs: {
-      [key: string]: { endpoint: string; title: string; message: string };
-    } = {
-      teacher: {
-        endpoint: `/api/staff/${id}`,
-        title: "Delete Staff Member",
-        message:
-          "Are you sure you want to delete this staff member? This action cannot be undone and all associated data will be permanently removed.",
-      },
-      student: {
-        endpoint: `/api/student/${id}`,
-        title: "Delete Student",
-        message:
-          "Are you sure you want to delete this student? This action cannot be undone and all associated data will be permanently removed.",
-      },
-      subject: {
-        endpoint: `/api/subject/${id}`,
-        title: "Delete Subject",
-        message:
-          "Are you sure you want to delete this subject? This action cannot be undone and all associated data will be permanently removed.",
-      },
-      classLevel: {
-        endpoint: `/api/class/level/${id}`,
-        title: "Delete Class Level",
-        message:
-          "Are you sure you want to delete this class level? This action cannot be undone and all associated data will be permanently removed.",
-      },
-      classArm: {
-        endpoint: `/api/class/arms/${id}`,
-        title: "Delete Class Arm",
-        message:
-          "Are you sure you want to delete this class arm? This action cannot be undone and all associated data will be permanently removed.",
-      },
-      parent: {
-        endpoint: `/api/parent/${id}`,
-        title: "Delete Parent",
-        message:
-          "Are you sure you want to delete this parent? This action cannot be undone and all linked student relationships will be removed.",
-      },
-      session: {
-        endpoint: `/api/session/${id}`,
-        title: "Delete Session",
-        message:
-          "Are you sure you want to delete this session? This action cannot be undone and all associated terms and data will be permanently removed.",
-      },
-      fee: {
-        endpoint: `/api/payment/fee/${id}`,
-        title: "Delete Fee",
-        message:
-          "Are you sure you want to delete this fee? This action cannot be undone.",
-      },
-    };
->>>>>>> habyaad_dev
 
   // Validate props based on type
   if (type === "delete" && !id) {

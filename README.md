@@ -1,10 +1,5 @@
 # Lama Dev School Management Dashboard
 
-<<<<<<< HEAD
-> Last updated: $(date)
-
-=======
->>>>>>> habyaad_dev
 ## Getting Started
 
 First, run the development server:

@@ -247,122 +247,18 @@ const SingleTeacherPage = () => {
               <div className="text-2xl font-bold text-purple-600">{staff.role}</div>
               <div className="text-xs text-gray-500 mt-1">Position</div>
             </div>
-<<<<<<< HEAD
-
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Qualification
-                </h3>
-=======
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {assignedClasses.length}
->>>>>>> habyaad_dev
               </div>
               <div className="text-xs text-gray-500 mt-1">Classes</div>
             </div>
-<<<<<<< HEAD
-
-            <div className="bg-gradient-to-br from-orange-50 to-red-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Gender
-                </h3>
-=======
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-green-600 text-lg">
-                {staff.qualification || "N/A"}
->>>>>>> habyaad_dev
               </div>
               <div className="text-xs text-gray-500 mt-1">Qualification</div>
             </div>
-<<<<<<< HEAD
-
-            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Religion
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-=======
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-orange-600">
->>>>>>> habyaad_dev
                 {staff.religion}
               </div>
               <div className="text-xs text-gray-500 mt-1">Religion</div>
             </div>
           </div>
 
-<<<<<<< HEAD
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-=======
-          {/* Assigned Classes */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Assigned Classes
-              </h2>
-              <Link
-                href="/list/classes"
-                className="text-sm text-lamaPurple hover:underline"
-              >
-                View All Classes
-              </Link>
-            </div>
-            {assignedClasses.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {assignedClasses.map((classArm) => (
-                  <div
-                    key={classArm.id}
-                    className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold">
-                          {(classArm.armName || classArm.name || "C").charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {getClassName(classArm)}
-                        </p>
-                        <p className="text-xs text-gray-500">Class Teacher</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No classes assigned</p>
-              </div>
-            )}
-          </div>
-
-          {/* Staff Details */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Staff Details
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm">ID</span>
-                  </div>
-                  <h3 className="font-medium text-gray-900">Staff ID</h3>
->>>>>>> habyaad_dev
                 </div>
                 <p className="text-gray-700 font-medium">{staff.staffId}</p>
               </div>

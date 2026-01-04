@@ -1,11 +1,6 @@
 "use client";
 
-<<<<<<< HEAD
-import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
-=======
-import { useEffect, useState } from "react";
->>>>>>> habyaad_dev
 
 interface UserCardProps {
   type: "student" | "teacher" | "parent" | "staff" | "alumni";
@@ -152,17 +147,6 @@ const UserCard = ({ type }: UserCardProps) => {
         </h1>
         <h2 className="capitalize text-sm font-medium text-white/80">{type}s</h2>
       </div>
-<<<<<<< HEAD
-      <h1 className="text-2xl font-semibold my-4">
-        {loading ? (
-          <span className="inline-block w-16 h-8 bg-white/30 animate-pulse rounded"></span>
-        ) : (
-          count?.toLocaleString() ?? "-"
-        )}
-      </h1>
-      <h2 className="capitalize text-sm font-medium text-gray-500">{type}s</h2>
-=======
->>>>>>> habyaad_dev
     </div>
   );
 };

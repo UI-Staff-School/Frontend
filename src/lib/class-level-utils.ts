@@ -56,10 +56,3 @@ export function normalizeClassLevels(levels: any[]): ClassLevel[] {
   });
 }
 
-<<<<<<< HEAD
-=======
-
-
-
-
->>>>>>> habyaad_dev

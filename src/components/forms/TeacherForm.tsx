@@ -16,30 +16,6 @@ const qualificationOptions = [
   "Other",
 ] as const;
 
-<<<<<<< HEAD
-// Password rules: only letters and numbers (alphanumeric)
-const passwordSchema = z
-  .string()
-  .min(1, { message: "Password is required!" })
-  .regex(/^[A-Za-z0-9]+$/, {
-    message: "Password must contain only letters and numbers",
-=======
-// Password rules: 8+ chars, letters and numbers only
-const passwordSchema = z
-  .string()
-  .min(8, { message: "Password must be at least 8 characters long!" })
-  .regex(/^[A-Za-z0-9]+$/, {
-    message: "Password must contain only letters and numbers",
-  })
-  .regex(/[A-Z]/, {
-    message: "Password must contain at least one uppercase letter",
-  })
-  .regex(/[a-z]/, {
-    message: "Password must contain at least one lowercase letter",
-  })
-  .regex(/[0-9]/, {
-    message: "Password must contain at least one number",
->>>>>>> habyaad_dev
   });
 
 // Base schema without password fields
@@ -139,31 +115,6 @@ const TeacherForm = ({
       const url = type === "create" ? "/api/staff" : `/api/staff/${data?.id}`;
       const method = type === "create" ? "POST" : "PUT";
 
-<<<<<<< HEAD
-      // Remove confirmPassword from payload (backend doesn't accept it)
-      const { confirmPassword, ...payload } = formData as any;
-
-      // For update, only include password if it's provided
-      if (type === "update" && !payload.password) {
-        delete payload.password;
-      }
-=======
-      // Build payload matching API schema (exclude confirmPassword)
-      const payload = {
-        staffId: formData.staffId,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
-        gender: formData.gender,
-        religion: formData.religion,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        password: formData.password,
-        address: formData.address,
-        role: formData.role,
-        qualification: formData.qualification,
-      };
->>>>>>> habyaad_dev
 
       const response = await fetch(url, {
         method,
@@ -522,13 +473,6 @@ const TeacherForm = ({
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-<<<<<<< HEAD
-                Password must contain only letters and numbers (alphanumeric
-                characters).
-=======
-                Password must be at least 8 characters with uppercase,
-                lowercase, and number. Only letters and numbers allowed.
->>>>>>> habyaad_dev
               </p>
             </div>
 

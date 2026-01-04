@@ -24,28 +24,6 @@ type ClassArm = {
   teacherId: string;
   classLevel?: {
     id: number;
-<<<<<<< HEAD
-    className: string;
-  };
-=======
-    name?: string;
-    className?: string;
-  };
-  teacher?: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    staffId?: string;
-  };
-};
-
-type Staff = {
-  id: string;
-  staffId: string;
-  firstName: string;
-  lastName: string;
-  role: string;
->>>>>>> habyaad_dev
 };
 
 const classLevelColumns = [
@@ -80,16 +58,6 @@ const classArmColumns = [
     className: "hidden md:table-cell",
   },
   {
-<<<<<<< HEAD
-    header: "Subjects Count",
-    accessor: "subjects",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Teacher ID",
-=======
-    header: "Teacher",
->>>>>>> habyaad_dev
     accessor: "teacherId",
     className: "hidden md:table-cell",
   },
@@ -267,150 +235,6 @@ const ClassListPage = () => {
     }
   }, [classLevels, classArms, staff, searchTerm, sortBy, sortOrder, activeTab]);
 
-<<<<<<< HEAD
-  const renderLevelRow = (item: ClassLevel) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        <div className="w-10 h-10 rounded-full bg-lamaSky flex items-center justify-center">
-          <span className="text-sm font-medium text-gray-700">
-            {item.className.charAt(0)}
-          </span>
-        </div>
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.className}</h3>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.coordinatorId}</td>
-      <td className="hidden md:table-cell">
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700">
-          <span className="text-base font-bold">
-            {item.subjectsOfferred?.length || item.subjectIds?.length || 0}
-          </span>
-          <span className="text-xs">
-            subject{(item.subjectsOfferred?.length || item.subjectIds?.length || 0) !== 1 ? 's' : ''}
-          </span>
-        </span>
-      </td>
-      <td>
-        <div className="flex items-center gap-2">
-          {role === "admin" && (
-            <>
-              <FormModal table="classLevel" type="update" data={item} />
-              <FormModal
-                table="classLevel"
-                type="delete"
-                id={item.id || (item as any).classLevelId}
-              />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
-
-  const renderArmRow = (item: ClassArm) => {
-    // Find the class level name from the classLevels array
-    const classLevel = classLevels.find(
-      (level) => String(level.id) === String(item.classLevelId)
-    );
-    const className =
-      classLevel?.className || `Class Level ${item.classLevelId}`;
-    
-    // Get subject count from the parent class level
-    // Backend returns 'subjectsOfferred' (array of objects) or 'subjectIds' (array of numbers)
-    const subjectCount = classLevel?.subjectsOfferred?.length || classLevel?.subjectIds?.length || 0;
-=======
-  // Helper function to get coordinator name
-  const getCoordinatorName = (coordinatorId: string): string => {
-    const coordinator = staff.find(
-      (s) => String(s.id) === String(coordinatorId) || String(s.staffId) === String(coordinatorId)
-    );
-    if (coordinator) {
-      return `${coordinator.firstName || ""} ${coordinator.lastName || ""}`.trim() || coordinatorId;
-    }
-    return coordinatorId;
-  };
-
-  const renderLevelRow = (item: ClassLevel) => {
-    const coordinatorName = getCoordinatorName(item.coordinatorId);
-
-    return (
-      <tr
-        key={item.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-      >
-        <td className="flex items-center gap-4 p-4">
-          <div className="w-10 h-10 rounded-full bg-lamaSky flex items-center justify-center">
-            <span className="text-sm font-medium text-gray-700">
-              {item.className.charAt(0)}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <h3 className="font-semibold">{item.className}</h3>
-          </div>
-        </td>
-        <td className="hidden md:table-cell">
-          <div className="flex flex-col">
-            <span className="font-medium">{coordinatorName}</span>
-            {coordinatorName !== item.coordinatorId && (
-              <span className="text-xs text-gray-400">{item.coordinatorId}</span>
-            )}
-          </div>
-        </td>
-        <td className="hidden lg:table-cell">
-          {item.subjectIds?.length || 0} subjects
-        </td>
-        <td>
-          <div className="flex items-center gap-2">
-            {role === "admin" && (
-              <>
-                <FormModal table="classLevel" type="update" data={item} />
-                <FormModal table="classLevel" type="delete" id={item.id} />
-              </>
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
-
-  // Helper function to get class level name
-  const getClassLevelName = (arm: ClassArm): string => {
-    // First try to get from nested classLevel object
-    if (arm.classLevel) {
-      return arm.classLevel.className || arm.classLevel.name || `Class ${arm.classLevelId}`;
-    }
-    // Fall back to looking up in classLevels array
-    const classLevel = classLevels.find(
-      (level) => String(level.id) === String(arm.classLevelId)
-    );
-    return classLevel?.className || `Class ${arm.classLevelId}`;
-  };
-
-  // Helper function to get teacher name
-  const getTeacherName = (arm: ClassArm): string => {
-    // First try to get from nested teacher object
-    if (arm.teacher) {
-      const name = `${arm.teacher.firstName || ""} ${arm.teacher.lastName || ""}`.trim();
-      return name || arm.teacherId;
-    }
-    // Fall back to looking up in staff array
-    const teacher = staff.find(
-      (s) => String(s.id) === String(arm.teacherId) || String(s.staffId) === String(arm.teacherId)
-    );
-    if (teacher) {
-      return `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim() || arm.teacherId;
-    }
-    return arm.teacherId;
-  };
-
-  const renderArmRow = (item: ClassArm) => {
-    const classLevelName = getClassLevelName(item);
-    const teacherName = getTeacherName(item);
->>>>>>> habyaad_dev
 
     return (
       <tr
@@ -424,56 +248,10 @@ const ClassListPage = () => {
             </span>
           </div>
           <div className="flex flex-col">
-<<<<<<< HEAD
-            <h3 className="font-semibold">{item.armName}</h3>
-          </div>
-        </td>
-        <td className="hidden md:table-cell">{className}</td>
-        <td className="hidden md:table-cell">
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700">
-            <span className="text-base font-bold">{subjectCount}</span>
-            <span className="text-xs">subject{subjectCount !== 1 ? 's' : ''}</span>
-          </span>
-        </td>
-        <td className="hidden md:table-cell">{item.teacherId}</td>
-=======
-            <h3 className="font-semibold">{classLevelName} {item.armName}</h3>
-            <span className="text-xs text-gray-500">{classLevelName}</span>
-          </div>
-        </td>
-        <td className="hidden md:table-cell">
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-            {classLevelName}
-          </span>
-        </td>
-        <td className="hidden md:table-cell">
-          <div className="flex flex-col">
-            <span className="font-medium">{teacherName}</span>
-            {teacherName !== item.teacherId && (
-              <span className="text-xs text-gray-400">{item.teacherId}</span>
-            )}
-          </div>
-        </td>
->>>>>>> habyaad_dev
         <td>
           <div className="flex items-center gap-2">
             {role === "admin" && (
               <>
-<<<<<<< HEAD
-                <FormModal 
-                  table="classArm" 
-                  type="update" 
-                  data={item}
-                />
-                <FormModal
-                  table="classArm"
-                  type="delete"
-                  id={item.id || item.classArmId || (item as any).armId}
-                />
-=======
-                <FormModal table="classArm" type="update" data={item} />
-                <FormModal table="classArm" type="delete" id={item.id} />
->>>>>>> habyaad_dev
               </>
             )}
           </div>

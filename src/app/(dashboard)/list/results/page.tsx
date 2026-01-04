@@ -204,11 +204,6 @@ export default function DashboardResultsPage() {
               <p>Students with records</p>
             </div>
           </div>
-<<<<<<< HEAD
-          {(role === "ADMIN" || role === "TEACHER") && (
-=======
-          {(role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER") && (
->>>>>>> habyaad_dev
             <>
               <Link
                 href="/results/add/multi"

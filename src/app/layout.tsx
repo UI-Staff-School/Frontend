@@ -1,14 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-<<<<<<< HEAD
-import "./globals.css";
-import ToasterProvider from "@/components/ToasterProvider";
-=======
-import { Suspense } from "react";
-import "./globals.css";
-import ToasterProvider from "@/components/ToasterProvider";
-import NavigationProgress from "@/components/NavigationProgress";
->>>>>>> habyaad_dev
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,12 +16,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-<<<<<<< HEAD
-=======
-        <Suspense fallback={null}>
-          <NavigationProgress />
-        </Suspense>
->>>>>>> habyaad_dev
         <ToasterProvider />
         {children}
       </body>

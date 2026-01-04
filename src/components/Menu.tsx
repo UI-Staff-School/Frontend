@@ -10,57 +10,6 @@ const menuItems = [
     title: "MENU",
     items: [
       {
-<<<<<<< HEAD
-=======
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/admin",
-        visible: ["admin"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/teacher",
-        visible: ["teacher"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/student",
-        visible: ["student"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/parent",
-        visible: ["parent"],
-      },
-      {
-        icon: "/result.png",
-        label: "My Results",
-        href: "/student/results",
-        visible: ["student"],
-      },
-      {
-        icon: "/attendance.png",
-        label: "My Attendance",
-        href: "/student/attendance",
-        visible: ["student"],
-      },
-      {
-        icon: "/finance.png",
-        label: "My Fees",
-        href: "/student/fees",
-        visible: ["student"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/admin",
-        visible: ["coordinator"],
-      },
-      {
->>>>>>> habyaad_dev
         icon: "/teacher.png",
         label: "Teachers",
         href: "/list/teachers",
@@ -76,23 +25,6 @@ const menuItems = [
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",
-<<<<<<< HEAD
-        visible: [],
-      },
-      {
-        icon: "/student.png",
-        label: "Alumni",
-        href: "/list/alumni",
-        visible: ["admin"],
-=======
-        visible: ["admin"],
-      },
-      {
-        icon: "/student.png",
-        label: "My Children",
-        href: "/parent/children",
-        visible: ["parent"],
->>>>>>> habyaad_dev
       },
       {
         icon: "/subject.png",
@@ -107,105 +39,11 @@ const menuItems = [
         visible: ["admin", "coordinator", "teacher"],
       },
       {
-<<<<<<< HEAD
-        icon: "/lesson.png",
-        label: "Lessons",
-        href: "/list/lessons",
-        visible: [],
-      },
-      {
-        icon: "/exam.png",
-        label: "Exams",
-        href: "/list/exams",
-        visible: [],
-      },
-      {
-        icon: "/assignment.png",
-        label: "Assignments",
-        href: "/list/assignments",
-        visible: [],
-=======
-        icon: "/calendar.png",
-        label: "Sessions",
-        href: "/list/sessions",
-        visible: ["admin"],
-      },
-      {
-        icon: "/student.png",
-        label: "Alumni",
-        href: "/list/alumni",
-        visible: ["admin"],
-      },
-      {
-        icon: "/finance.png",
-        label: "Fees",
-        href: "/list/fees",
-        visible: ["admin"],
-      },
-      {
-        icon: "/finance.png",
-        label: "Payments",
-        href: "/list/payments",
-        visible: ["admin"],
->>>>>>> habyaad_dev
       },
       {
         icon: "/result.png",
         label: "Results",
         href: "/list/results",
-<<<<<<< HEAD
-        visible: ["admin", "teacher", "student"],
-      },
-      {
-        icon: "/attendance.png",
-        label: "Attendance",
-        href: "/list/attendance",
-        visible: ["admin", "teacher", "student"],
-      },
-      {
-        icon: "/finance.png",
-        label: "Fees",
-        href: "/list/fees",
-        visible: ["admin"],
-      },
-      {
-        icon: "/finance.png",
-        label: "Payments",
-        href: "/list/payments",
-        visible: ["admin"],
-      },
-      {
-        icon: "/date.png",
-        label: "Sessions",
-        href: "/list/sessions",
-        visible: ["admin"],
-      },
-      {
-        icon: "/calendar.png",
-        label: "Events",
-        href: "/list/events",
-        visible: [],
-      },
-      {
-        icon: "/message.png",
-        label: "Messages",
-        href: "/list/messages",
-        visible: [],
-=======
-        visible: ["admin", "coordinator", "teacher"],
-      },
-      {
-        icon: "/result.png",
-        label: "Class Rankings",
-        href: "/list/results/rankings",
-        visible: ["admin", "coordinator", "teacher"],
-      },
-      {
-        icon: "/attendance.png",
-        label: "Attendance",
-        href: "/list/attendance",
-        visible: ["admin", "coordinator", "teacher"],
->>>>>>> habyaad_dev
       },
       {
         icon: "/announcement.png",
@@ -222,27 +60,11 @@ const menuItems = [
         icon: "/profile.png",
         label: "Profile",
         href: "/profile",
-<<<<<<< HEAD
-        visible: ["admin", "teacher", "student"],
-=======
-        visible: ["admin", "coordinator", "teacher", "student", "parent"],
->>>>>>> habyaad_dev
       },
       {
         icon: "/setting.png",
         label: "Settings",
         href: "/settings",
-<<<<<<< HEAD
-        visible: ["admin", "teacher", "student"],
-      },
-      {
-        icon: "/logout.png",
-        label: "Logout",
-        href: "/logout",
-        visible: ["admin", "teacher", "student"],
-=======
-        visible: ["admin"],
->>>>>>> habyaad_dev
       },
     ],
   },

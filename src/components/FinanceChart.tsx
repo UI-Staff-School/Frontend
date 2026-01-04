@@ -1,9 +1,5 @@
 "use client";
 
-<<<<<<< HEAD
-import Image from "next/image";
-=======
->>>>>>> habyaad_dev
 import { useEffect, useState } from "react";
 import {
   BarChart,
