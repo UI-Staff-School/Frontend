@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiHeaders } from "@/lib/api-utils";
 import { buildExternalApiUrl } from "@/lib/external-api";
 
+export const dynamic = "force-dynamic";
+
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 function resolveAttendancePath(slug?: string[]): string {

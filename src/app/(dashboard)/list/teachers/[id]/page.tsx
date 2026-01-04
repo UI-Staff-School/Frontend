@@ -1,12 +1,13 @@
 "use client";
 import FormModal from "@/components/FormModal";
 import { role } from "@/lib/data";
-import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 type Staff = {
   id: string;
+  _id?: string;
   staffId: string;
   firstName: string;
   lastName: string;
@@ -20,24 +21,86 @@ type Staff = {
   dateOfBirth: string;
 };
 
+type ClassArm = {
+  id: number;
+  name?: string;
+  armName?: string;
+  teacherId?: string;
+  classLevelId?: number;
+  classLevel?: {
+    id: number;
+    name?: string;
+    className?: string;
+  };
+};
+
+type ClassLevel = {
+  id: number;
+  name?: string;
+  className?: string;
+};
+
 const SingleTeacherPage = () => {
   const params = useParams();
+  const router = useRouter();
   const [staff, setStaff] = useState<Staff | null>(null);
+  const [assignedClasses, setAssignedClasses] = useState<ClassArm[]>([]);
+  const [classLevels, setClassLevels] = useState<ClassLevel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStaff = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/staff/${params.id}`, {
-          credentials: "include",
-        });
-        if (!response.ok) {
+
+        // Fetch staff, class arms, and class levels in parallel
+        const [staffRes, classArmsRes, classLevelsRes] = await Promise.all([
+          fetch(`/api/staff/${params.id}`, { credentials: "include" }),
+          fetch("/api/class/arms", { credentials: "include" }),
+          fetch("/api/class/level", { credentials: "include" }),
+        ]);
+
+        if (!staffRes.ok) {
           throw new Error("Failed to fetch staff member");
         }
-        const data = await response.json();
-        setStaff(data);
+
+        const staffData = await staffRes.json();
+
+        // Check if we got an error response
+        if (staffData.error) {
+          throw new Error(staffData.error);
+        }
+
+        // Normalize - ensure staff has an id
+        const normalizedStaff = {
+          ...staffData,
+          id: String(staffData.id || staffData.staffId || staffData._id || params.id),
+          staffId: staffData.staffId || String(params.id),
+        };
+
+        setStaff(normalizedStaff);
+
+        // Handle class arms - find classes assigned to this staff
+        if (classArmsRes.ok) {
+          const armsData = await classArmsRes.json();
+          const armsArray = Array.isArray(armsData) ? armsData : [];
+
+          // Filter to find classes where this staff is the teacher
+          const assignedArms = armsArray.filter(
+            (arm: ClassArm) =>
+              String(arm.teacherId) === String(normalizedStaff.id) ||
+              String(arm.teacherId) === String(normalizedStaff.staffId)
+          );
+
+          setAssignedClasses(assignedArms);
+        }
+
+        // Handle class levels
+        if (classLevelsRes.ok) {
+          const levelsData = await classLevelsRes.json();
+          setClassLevels(Array.isArray(levelsData) ? levelsData : []);
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -46,340 +109,369 @@ const SingleTeacherPage = () => {
     };
 
     if (params.id) {
-      fetchStaff();
+      fetchData();
     }
   }, [params.id]);
 
+  // Helper function to get class name
+  const getClassName = (classArm: ClassArm): string => {
+    // Try to get from nested classLevel
+    let levelName =
+      classArm.classLevel?.className || classArm.classLevel?.name || "";
+
+    // If no nested classLevel, look up in classLevels array
+    if (!levelName && classArm.classLevelId) {
+      const classLevel = classLevels.find(
+        (level) => level.id === classArm.classLevelId
+      );
+      levelName = classLevel?.className || classLevel?.name || "";
+    }
+
+    const armName = classArm.armName || classArm.name || "";
+
+    if (levelName && armName) return `${levelName} ${armName}`;
+    if (levelName) return levelName;
+    if (armName) return armName;
+    return `Class ${classArm.id}`;
+  };
+
   if (loading) {
     return (
-      <div className="flex-1 p-4 flex items-center justify-center">
-        <p>Loading staff member...</p>
+      <div className="p-4">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lamaPurple mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading staff member...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error || !staff) {
     return (
-      <div className="flex-1 p-4 flex items-center justify-center">
-        <p className="text-red-500">
-          Error: {error || "Staff member not found"}
-        </p>
+      <div className="p-4">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600">
+              Error: {error || "Staff member not found"}
+            </p>
+            <button
+              onClick={() => router.back()}
+              className="mt-4 px-4 py-2 bg-lamaPurple text-white rounded-md hover:bg-lamaPurpleDark"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-2 sm:p-4 gap-4 grid grid-cols-1 lg:grid-cols-3">
-      {/* LEFT */}
-      <div className="w-full lg:col-span-2">
-        {/* TOP */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-          {/* USER INFO CARD */}
-          <div className="bg-lamaSky py-4 sm:py-6 px-3 sm:px-4 rounded-md lg:col-span-2">
-            <div className="flex flex-col sm:flex-row gap-4">
+    <div className="p-2 sm:p-4">
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <span>←</span>
+        <span>Back to Staff</span>
+      </button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* LEFT - Main Info */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Profile Card */}
+          <div className="bg-gradient-to-r from-lamaPurpleLight to-lamaPurple/20 rounded-xl p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex-shrink-0 mx-auto sm:mx-0">
-                <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-2xl sm:text-4xl font-medium text-gray-600">
-                    {staff.firstName.charAt(0)}
-                    {staff.lastName.charAt(0)}
+                <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-white shadow-lg flex items-center justify-center">
+                  <span className="text-3xl sm:text-4xl font-bold text-lamaPurple">
+                    {staff.firstName?.charAt(0) || ""}
+                    {staff.lastName?.charAt(0) || ""}
                   </span>
                 </div>
               </div>
-              <div className="flex-1 flex flex-col justify-between gap-3 sm:gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                  <h1 className="text-lg sm:text-xl font-semibold text-center sm:text-left">
+              <div className="flex-1 text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {staff.firstName} {staff.lastName}
                   </h1>
                   {role === "admin" && (
-                    <div className="flex justify-center sm:justify-start">
-                      <FormModal table="teacher" type="update" data={staff} />
-                    </div>
+                    <FormModal table="teacher" type="update" data={staff} />
                   )}
                 </div>
-                <p className="text-sm text-gray-500 text-center sm:text-left">
-                  {staff.role} - {staff.qualification}
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/blood.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">{staff.gender}</span>
+                <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
+                  <span className="px-3 py-1 bg-white/80 rounded-full text-sm font-medium text-gray-700">
+                    {staff.staffId}
+                  </span>
+                  <span className="px-3 py-1 bg-purple-100 rounded-full text-sm font-medium text-purple-800">
+                    {staff.role}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      staff.gender === "Male"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-pink-100 text-pink-800"
+                    }`}
+                  >
+                    {staff.gender}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="text-gray-500">Email:</span>
+                    <span className="font-medium truncate">{staff.email}</span>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/date.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">
-                      {new Date(staff.dateOfBirth).toLocaleDateString()}
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="text-gray-500">Phone:</span>
+                    <span className="font-medium">{staff.phoneNumber}</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="text-gray-500">DOB:</span>
+                    <span className="font-medium">
+                      {staff.dateOfBirth
+                        ? new Date(staff.dateOfBirth).toLocaleDateString()
+                        : "N/A"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/mail.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">{staff.email}</span>
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/phone.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">{staff.phoneNumber}</span>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
-          {/* SMALL CARDS */}
-          <div className="lg:col-span-1">
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-4">
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleAttendance.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    {staff.staffId}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">
-                    Staff ID
-                  </span>
-                </div>
-              </div>
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleBranch.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    {staff.role}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">Role</span>
-                </div>
-              </div>
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleLesson.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    {staff.qualification}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">
-                    Qualification
-                  </span>
-                </div>
-              </div>
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleClass.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    {staff.religion}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">
-                    Religion
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* BOTTOM - Staff Details */}
-        <div className="mt-4 bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
-            Staff Details
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🆔</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Staff ID
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {staff.staffId}
-              </p>
-            </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">💼</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Role
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">{staff.role}</p>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-purple-600">{staff.role}</div>
+              <div className="text-xs text-gray-500 mt-1">Position</div>
             </div>
-
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🎓</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Qualification
-                </h3>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {assignedClasses.length}
               </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {staff.qualification}
-              </p>
+              <div className="text-xs text-gray-500 mt-1">Classes</div>
             </div>
-
-            <div className="bg-gradient-to-br from-orange-50 to-red-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">👤</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Gender
-                </h3>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-green-600 text-lg">
+                {staff.qualification || "N/A"}
               </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {staff.gender}
-              </p>
+              <div className="text-xs text-gray-500 mt-1">Qualification</div>
             </div>
-
-            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🕊️</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Religion
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-orange-600">
                 {staff.religion}
-              </p>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Religion</div>
             </div>
+          </div>
 
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">📅</span>
+          {/* Assigned Classes */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Assigned Classes
+              </h2>
+              <Link
+                href="/list/classes"
+                className="text-sm text-lamaPurple hover:underline"
+              >
+                View All Classes
+              </Link>
+            </div>
+            {assignedClasses.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {assignedClasses.map((classArm) => (
+                  <div
+                    key={classArm.id}
+                    className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold">
+                          {(classArm.armName || classArm.name || "C").charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {getClassName(classArm)}
+                        </p>
+                        <p className="text-xs text-gray-500">Class Teacher</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No classes assigned</p>
+              </div>
+            )}
+          </div>
+
+          {/* Staff Details */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Staff Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">ID</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Staff ID</h3>
                 </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Date of Birth
-                </h3>
+                <p className="text-gray-700 font-medium">{staff.staffId}</p>
               </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {new Date(staff.dateOfBirth).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* RIGHT */}
-      <div className="w-full lg:col-span-1 grid gap-4 sm:gap-6">
-        {/* Contact Information */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-            Contact Information
-          </h2>
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-green-600 text-xs sm:text-sm">📧</span>
+
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">R</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Role</h3>
+                </div>
+                <p className="text-gray-700 font-medium">{staff.role}</p>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-500">Email</p>
-                <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                  {staff.email}
+
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">Q</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Qualification</h3>
+                </div>
+                <p className="text-gray-700 font-medium">
+                  {staff.qualification || "N/A"}
                 </p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 text-xs sm:text-sm">📞</span>
+
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">G</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Gender</h3>
+                </div>
+                <p className="text-gray-700 font-medium">{staff.gender}</p>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-500">Phone</p>
-                <p className="font-medium text-gray-900 text-sm sm:text-base">
-                  {staff.phoneNumber}
-                </p>
+
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">R</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Religion</h3>
+                </div>
+                <p className="text-gray-700 font-medium">{staff.religion}</p>
               </div>
-            </div>
-            <div className="flex items-start gap-2 sm:gap-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 rounded-lg flex items-center justify-center mt-1">
-                <span className="text-purple-600 text-xs sm:text-sm">📍</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-500">Address</p>
-                <p className="font-medium text-gray-900 text-sm sm:text-base">
-                  {staff.address}
+
+              <div className="bg-gradient-to-br from-gray-50 to-slate-100 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">D</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Date of Birth</h3>
+                </div>
+                <p className="text-gray-700 font-medium">
+                  {staff.dateOfBirth
+                    ? new Date(staff.dateOfBirth).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "N/A"}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-            Quick Actions
-          </h2>
-          <div className="space-y-2 sm:space-y-3">
-            <button className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
-              <span className="text-blue-600 text-sm sm:text-base">📧</span>
-              <span className="text-gray-700 text-sm sm:text-base">
-                Send Email
-              </span>
-            </button>
-            <button className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
-              <span className="text-green-600 text-sm sm:text-base">📞</span>
-              <span className="text-gray-700 text-sm sm:text-base">
-                Call Staff
-              </span>
-            </button>
-            <button className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors">
-              <span className="text-purple-600 text-sm sm:text-base">📄</span>
-              <span className="text-gray-700 text-sm sm:text-base">
-                View Profile
-              </span>
-            </button>
+        {/* RIGHT - Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Contact Information */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Contact Information
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 text-sm">E</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium text-gray-900 break-words">
+                    {staff.email || "N/A"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 text-sm">P</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-medium text-gray-900">
+                    {staff.phoneNumber || "N/A"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-purple-600 text-sm">A</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium text-gray-900 break-words">
+                    {staff.address || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Quick Actions
+            </h2>
+            <div className="space-y-2">
+              {staff.email && (
+                <a
+                  href={`mailto:${staff.email}`}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+                >
+                  <span className="text-green-600">E</span>
+                  <span className="text-gray-700">Send Email</span>
+                </a>
+              )}
+              {staff.phoneNumber && (
+                <a
+                  href={`tel:${staff.phoneNumber}`}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+                >
+                  <span className="text-blue-600">P</span>
+                  <span className="text-gray-700">Call Staff</span>
+                </a>
+              )}
+              <Link
+                href="/list/classes"
+                className="w-full flex items-center gap-3 p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors"
+              >
+                <span className="text-purple-600">C</span>
+                <span className="text-gray-700">Manage Classes</span>
+              </Link>
+              {role === "admin" && (
+                <FormModal
+                  table="teacher"
+                  type="delete"
+                  id={staff.id}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

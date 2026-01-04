@@ -2,8 +2,9 @@
 import FormModal from "@/components/FormModal";
 import { role } from "@/lib/data";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 type Student = {
   id: string;
@@ -16,26 +17,126 @@ type Student = {
   address: string;
   classArmId: number;
   yearOfAdmission: string;
+  classArm?: {
+    id: number;
+    name?: string;
+    armName?: string;
+    classLevel?: {
+      id: number;
+      name?: string;
+      className?: string;
+    };
+  };
+};
+
+type ClassArm = {
+  id: number;
+  name?: string;
+  armName?: string;
+  classLevelId?: number;
+  classLevel?: {
+    id: number;
+    name?: string;
+    className?: string;
+  };
+};
+
+type ClassLevel = {
+  id: number;
+  name?: string;
+  className?: string;
+};
+
+type Result = {
+  id: number;
+  subjectName?: string;
+  subject?: { subjectName: string };
+  score: number;
+  grade?: string;
+  term?: { name: string };
+  termId?: number;
+};
+
+type Attendance = {
+  id: number;
+  date: string;
+  status: string;
 };
 
 const SingleStudentPage = () => {
   const params = useParams();
+  const router = useRouter();
   const [student, setStudent] = useState<Student | null>(null);
+  const [classArms, setClassArms] = useState<ClassArm[]>([]);
+  const [classLevels, setClassLevels] = useState<ClassLevel[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStudent = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/student/${params.id}`, {
-          credentials: "include",
-        });
-        if (!response.ok) {
+
+        // Fetch student, class arms, class levels, results, and attendance in parallel
+        const [studentRes, classArmsRes, classLevelsRes, resultsRes, attendanceRes] = await Promise.all([
+          fetch(`/api/student/${params.id}`, { credentials: "include" }),
+          fetch("/api/class/arms", { credentials: "include" }),
+          fetch("/api/class/level", { credentials: "include" }),
+          fetch(`/api/results/student/${params.id}`, { credentials: "include" }).catch(() => null),
+          fetch(`/api/attendance/student/${params.id}`, { credentials: "include" }).catch(() => null),
+        ]);
+
+        if (!studentRes.ok) {
           throw new Error("Failed to fetch student");
         }
-        const data = await response.json();
-        setStudent(data);
+
+        const studentData = await studentRes.json();
+
+        // Normalize - ensure student has an id
+        const normalizedStudent = {
+          ...studentData,
+          id: String(studentData.id || studentData.admissionNo || studentData._id || params.id),
+        };
+
+        setStudent(normalizedStudent);
+
+        // Handle class arms
+        if (classArmsRes.ok) {
+          const armsData = await classArmsRes.json();
+          setClassArms(Array.isArray(armsData) ? armsData : []);
+        }
+
+        // Handle class levels
+        if (classLevelsRes.ok) {
+          const levelsData = await classLevelsRes.json();
+          setClassLevels(Array.isArray(levelsData) ? levelsData : []);
+        }
+
+        // Handle results
+        if (resultsRes?.ok) {
+          const resultsData = await resultsRes.json();
+          const resultsArray = Array.isArray(resultsData)
+            ? resultsData
+            : Array.isArray(resultsData?.data)
+            ? resultsData.data
+            : Array.isArray(resultsData?.results)
+            ? resultsData.results
+            : [];
+          setResults(resultsArray.slice(0, 10)); // Show latest 10
+        }
+
+        // Handle attendance
+        if (attendanceRes?.ok) {
+          const attendanceData = await attendanceRes.json();
+          const attendanceArray = Array.isArray(attendanceData)
+            ? attendanceData
+            : Array.isArray(attendanceData?.data)
+            ? attendanceData.data
+            : [];
+          setAttendance(attendanceArray.slice(0, 10)); // Show latest 10
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -44,9 +145,63 @@ const SingleStudentPage = () => {
     };
 
     if (params.id) {
-      fetchStudent();
+      fetchData();
     }
   }, [params.id]);
+
+  // Helper function to get class name
+  const getClassName = (): string => {
+    if (!student) return "N/A";
+
+    // First try to get from nested classArm object
+    if (student.classArm) {
+      const levelName =
+        student.classArm.classLevel?.className ||
+        student.classArm.classLevel?.name ||
+        "";
+      const armName = student.classArm.armName || student.classArm.name || "";
+      if (levelName && armName) return `${levelName} ${armName}`;
+      if (levelName) return levelName;
+      if (armName) return armName;
+    }
+
+    // Fall back to looking up in classArms array
+    const classArm = classArms.find((arm) => arm.id === student.classArmId);
+    if (classArm) {
+      // Try to get level name from nested classLevel in arm
+      let levelName =
+        classArm.classLevel?.className || classArm.classLevel?.name || "";
+
+      // If no nested classLevel, look up in classLevels array
+      if (!levelName && classArm.classLevelId) {
+        const classLevel = classLevels.find(
+          (level) => level.id === classArm.classLevelId
+        );
+        levelName = classLevel?.className || classLevel?.name || "";
+      }
+
+      const armName = classArm.armName || classArm.name || "";
+      if (levelName && armName) return `${levelName} ${armName}`;
+      if (levelName) return levelName;
+      if (armName) return armName;
+    }
+
+    return `Class ${student.classArmId}`;
+  };
+
+  // Calculate attendance stats
+  const attendanceStats = {
+    present: attendance.filter((a) => a.status === "Present").length,
+    absent: attendance.filter((a) => a.status === "Absent").length,
+    late: attendance.filter((a) => a.status === "Late").length,
+    total: attendance.length,
+  };
+
+  // Calculate average score
+  const averageScore =
+    results.length > 0
+      ? Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length)
+      : 0;
 
   if (loading) {
     return (
@@ -70,10 +225,10 @@ const SingleStudentPage = () => {
               Error: {error || "Student not found"}
             </p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => router.back()}
               className="mt-4 px-4 py-2 bg-lamaPurple text-white rounded-md hover:bg-lamaPurpleDark"
             >
-              Try Again
+              Go Back
             </button>
           </div>
         </div>
@@ -81,305 +236,372 @@ const SingleStudentPage = () => {
     );
   }
 
+  const className = getClassName();
+
   return (
-    <div className="p-2 sm:p-4 gap-4 grid grid-cols-1 lg:grid-cols-3">
-      {/* LEFT */}
-      <div className="w-full lg:col-span-2">
-        {/* TOP */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-          {/* USER INFO CARD */}
-          <div className="bg-lamaSky py-4 sm:py-6 px-3 sm:px-4 rounded-md lg:col-span-2">
-            <div className="flex flex-col sm:flex-row gap-4">
+    <div className="p-2 sm:p-4">
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <span>←</span>
+        <span>Back to Students</span>
+      </button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* LEFT - Main Info */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Profile Card */}
+          <div className="bg-gradient-to-r from-lamaSky to-lamaSkyLight rounded-xl p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row gap-6">
               <div className="flex-shrink-0 mx-auto sm:mx-0">
-                <div className="w-24 h-24 sm:w-36 sm:h-36 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-2xl sm:text-4xl font-medium text-gray-600">
-                    {student.firstName.charAt(0)}
-                    {student.lastName.charAt(0)}
+                <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-white shadow-lg flex items-center justify-center">
+                  <span className="text-3xl sm:text-4xl font-bold text-lamaPurple">
+                    {student.firstName?.charAt(0) || ""}
+                    {student.lastName?.charAt(0) || ""}
                   </span>
                 </div>
               </div>
-              <div className="flex-1 flex flex-col justify-between gap-3 sm:gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                  <h1 className="text-lg sm:text-xl font-semibold text-center sm:text-left">
+              <div className="flex-1 text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {student.firstName} {student.lastName}
                   </h1>
                   {role === "admin" && (
-                    <div className="flex justify-center sm:justify-start">
-                      <FormModal table="student" type="update" data={student} />
-                    </div>
+                    <FormModal table="student" type="update" data={student} />
                   )}
                 </div>
-                <p className="text-sm text-gray-500 text-center sm:text-left">
-                  Student - Class {student.classArmId}
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/blood.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">{student.gender}</span>
+                <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
+                  <span className="px-3 py-1 bg-white/80 rounded-full text-sm font-medium text-gray-700">
+                    {student.admissionNo}
+                  </span>
+                  <span className="px-3 py-1 bg-green-100 rounded-full text-sm font-medium text-green-800">
+                    {className}
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      student.gender === "Male"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-pink-100 text-pink-800"
+                    }`}
+                  >
+                    {student.gender}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="text-gray-500">Religion:</span>
+                    <span className="font-medium">{student.religion}</span>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/date.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="text-gray-500">DOB:</span>
+                    <span className="font-medium">
                       {new Date(student.dateOfBirth).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/mail.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">{student.admissionNo}</span>
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <Image
-                      src="/phone.png"
-                      alt=""
-                      width={12}
-                      height={12}
-                      className="sm:w-3.5 sm:h-3.5"
-                    />
-                    <span className="truncate">Class {student.classArmId}</span>
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <span className="text-gray-500">Admitted:</span>
+                    <span className="font-medium">
+                      {student.yearOfAdmission
+                        ? new Date(student.yearOfAdmission).getFullYear()
+                        : "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          {/* SMALL CARDS */}
-          <div className="lg:col-span-1">
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-4">
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleAttendance.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    {student.admissionNo}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">
-                    Admission No
-                  </span>
-                </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-blue-600">{className}</div>
+              <div className="text-xs text-gray-500 mt-1">Current Class</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-green-600">{averageScore}%</div>
+              <div className="text-xs text-gray-500 mt-1">Avg. Score</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {attendanceStats.total > 0
+                  ? Math.round((attendanceStats.present / attendanceStats.total) * 100)
+                  : 0}
+                %
               </div>
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleBranch.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    Class {student.classArmId}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">
-                    Class Arm
-                  </span>
-                </div>
+              <div className="text-xs text-gray-500 mt-1">Attendance</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {results.length}
               </div>
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleLesson.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    {new Date(student.yearOfAdmission).getFullYear()}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">
-                    Year of Admission
-                  </span>
-                </div>
-              </div>
-              {/* CARD */}
-              <div className="bg-white p-3 sm:p-4 rounded-md flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <Image
-                  src="/singleClass.png"
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6 mx-auto sm:mx-0"
-                />
-                <div className="text-center sm:text-left">
-                  <h1 className="text-lg sm:text-xl font-semibold">
-                    {student.religion}
-                  </h1>
-                  <span className="text-xs sm:text-sm text-gray-400">
-                    Religion
-                  </span>
-                </div>
-              </div>
+              <div className="text-xs text-gray-500 mt-1">Results</div>
             </div>
           </div>
-        </div>
-        {/* BOTTOM - Student Details */}
-        <div className="mt-4 bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
-            Student Details
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🆔</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Admission No
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {student.admissionNo}
-              </p>
-            </div>
 
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🎓</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Class Arm
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Class {student.classArmId}
-              </p>
+          {/* Recent Results */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Recent Results
+              </h2>
+              <Link
+                href={`/list/results?student=${params.id}`}
+                className="text-sm text-lamaPurple hover:underline"
+              >
+                View All
+              </Link>
             </div>
-
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">📅</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Year of Admission
-                </h3>
+            {results.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 font-medium text-gray-600">
+                        Subject
+                      </th>
+                      <th className="text-center py-2 font-medium text-gray-600">
+                        Score
+                      </th>
+                      <th className="text-center py-2 font-medium text-gray-600">
+                        Grade
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((result, index) => (
+                      <tr
+                        key={result.id || index}
+                        className="border-b border-gray-100 last:border-0"
+                      >
+                        <td className="py-3">
+                          {result.subjectName || result.subject?.subjectName || "N/A"}
+                        </td>
+                        <td className="py-3 text-center">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              result.score >= 70
+                                ? "bg-green-100 text-green-800"
+                                : result.score >= 50
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {result.score}%
+                          </span>
+                        </td>
+                        <td className="py-3 text-center font-medium">
+                          {result.grade || getGrade(result.score)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {new Date(student.yearOfAdmission).getFullYear()}
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-orange-50 to-red-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">👤</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Gender
-                </h3>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No results available</p>
               </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {student.gender}
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🕊️</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Religion
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {student.religion}
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-3 sm:p-4 rounded-lg">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">📅</span>
-                </div>
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base">
-                  Date of Birth
-                </h3>
-              </div>
-              <p className="text-gray-600 text-sm sm:text-base">
-                {new Date(student.dateOfBirth).toLocaleDateString()}
-              </p>
-            </div>
+            )}
           </div>
-        </div>
-      </div>
-      {/* RIGHT */}
-      <div className="w-full lg:col-span-1 grid gap-4 sm:gap-6">
-        {/* Contact Information */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-            Contact Information
-          </h2>
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-start gap-2 sm:gap-3">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-100 rounded-lg flex items-center justify-center mt-1">
-                <span className="text-purple-600 text-xs sm:text-sm">📍</span>
+
+          {/* Student Details */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Student Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">ID</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Admission No</h3>
+                </div>
+                <p className="text-gray-700 font-medium">{student.admissionNo}</p>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-500">Address</p>
-                <p className="font-medium text-gray-900 text-sm sm:text-base">
-                  {student.address}
+
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">C</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Class</h3>
+                </div>
+                <p className="text-gray-700 font-medium">{className}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">Y</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Year of Admission</h3>
+                </div>
+                <p className="text-gray-700 font-medium">
+                  {student.yearOfAdmission
+                    ? new Date(student.yearOfAdmission).getFullYear()
+                    : "N/A"}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">G</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Gender</h3>
+                </div>
+                <p className="text-gray-700 font-medium">{student.gender}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">R</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Religion</h3>
+                </div>
+                <p className="text-gray-700 font-medium">{student.religion}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-50 to-slate-100 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">D</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Date of Birth</h3>
+                </div>
+                <p className="text-gray-700 font-medium">
+                  {new Date(student.dateOfBirth).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-            Quick Actions
-          </h2>
-          <div className="space-y-2 sm:space-y-3">
-            <button className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
-              <span className="text-blue-600 text-sm sm:text-base">📧</span>
-              <span className="text-gray-700 text-sm sm:text-base">
-                Contact Parent
-              </span>
-            </button>
-            <button className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
-              <span className="text-green-600 text-sm sm:text-base">📊</span>
-              <span className="text-gray-700 text-sm sm:text-base">
-                View Grades
-              </span>
-            </button>
-            <button className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors">
-              <span className="text-purple-600 text-sm sm:text-base">📄</span>
-              <span className="text-gray-700 text-sm sm:text-base">
-                View Profile
-              </span>
-            </button>
+        {/* RIGHT - Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Contact Information */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Contact Information
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-purple-600 text-sm">A</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium text-gray-900 break-words">
+                    {student.address || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Attendance Summary */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Attendance</h2>
+              <Link
+                href={`/list/attendance?student=${params.id}`}
+                className="text-sm text-lamaPurple hover:underline"
+              >
+                View All
+              </Link>
+            </div>
+            {attendanceStats.total > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Present</span>
+                  <span className="font-medium text-green-600">
+                    {attendanceStats.present}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Absent</span>
+                  <span className="font-medium text-red-600">
+                    {attendanceStats.absent}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Late</span>
+                  <span className="font-medium text-yellow-600">
+                    {attendanceStats.late}
+                  </span>
+                </div>
+                <div className="pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-900 font-medium">Total Days</span>
+                    <span className="font-bold text-gray-900">
+                      {attendanceStats.total}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p>No attendance records</p>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Quick Actions
+            </h2>
+            <div className="space-y-2">
+              <Link
+                href={`/list/results?student=${params.id}`}
+                className="w-full flex items-center gap-3 p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+              >
+                <span className="text-green-600">R</span>
+                <span className="text-gray-700">View All Results</span>
+              </Link>
+              <Link
+                href={`/list/attendance?student=${params.id}`}
+                className="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+              >
+                <span className="text-blue-600">A</span>
+                <span className="text-gray-700">View Attendance</span>
+              </Link>
+              {role === "admin" && (
+                <>
+                  <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors">
+                    <span className="text-purple-600">P</span>
+                    <span className="text-gray-700">Print Report Card</span>
+                  </button>
+                  <FormModal
+                    table="student"
+                    type="delete"
+                    id={parseInt(student.id)}
+                  />
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
+};
+
+// Helper function to calculate grade from score
+const getGrade = (score: number): string => {
+  if (score >= 70) return "A";
+  if (score >= 60) return "B";
+  if (score >= 50) return "C";
+  if (score >= 40) return "D";
+  return "F";
 };
 
 export default SingleStudentPage;

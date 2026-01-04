@@ -80,7 +80,14 @@ const TeacherListPage = () => {
           throw new Error("Failed to fetch staff");
         }
         const payload = await response.json();
-        const staffArray = Array.isArray(payload) ? payload : payload.data || [];
+        let staffArray = Array.isArray(payload) ? payload : payload.data || [];
+
+        // Normalize staff data - ensure each staff member has an id
+        staffArray = staffArray.map((member: any) => ({
+          ...member,
+          id: String(member.id || member.staffId || member._id || ""),
+        }));
+
         setStaff(staffArray);
         setFilteredStaff(staffArray);
       } catch (err: any) {
@@ -184,7 +191,7 @@ const TeacherListPage = () => {
       <td className="hidden md:table-cell">{item.address}</td>
       <td>
         <div className="flex items-center gap-2">
-          <Link href={`/list/teachers/${item.id}`}>
+          <Link href={`/list/teachers/${item.staffId || item.id}`}>
             <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky hover:bg-lamaSkyLight active:scale-95 transition-transform">
               <Image src="/view.png" alt="" width={16} height={16} />
             </button>
@@ -192,7 +199,7 @@ const TeacherListPage = () => {
           {role === "admin" && (
             <>
               <FormModal table="teacher" type="update" data={item} />
-              <FormModal table="teacher" type="delete" id={item.id} />
+              <FormModal table="teacher" type="delete" id={item.staffId || item.id} />
             </>
           )}
         </div>

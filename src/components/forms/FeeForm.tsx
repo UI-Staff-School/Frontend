@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect, useState } from "react";
+import { showError, showSuccess } from "@/lib/toast";
 
 const schema = z.object({
   name: z.string().min(1, { message: "Fee name is required!" }),
@@ -119,17 +120,21 @@ const FeeForm = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to ${type} fee`);
+        const text = await response.text();
+        let errorMessage = `Failed to ${type} fee`;
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorData.message || errorData.detail || errorMessage;
+        } catch {
+          if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
       }
 
+      showSuccess(`Fee ${type === "create" ? "created" : "updated"} successfully`);
       window.location.reload();
     } catch (error: any) {
-      console.error(
-        `Error ${type === "create" ? "creating" : "updating"} fee:`,
-        error.message
-      );
-      alert(error.message || `Failed to ${type} fee`);
+      showError(error.message || `Failed to ${type} fee`);
     }
   });
 

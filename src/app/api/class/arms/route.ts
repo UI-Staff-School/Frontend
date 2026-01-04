@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiHeaders } from "@/lib/api-utils";
+import { buildExternalApiUrl } from "@/lib/external-api";
 
-const API_BASE_URL = "https://ui-staff-school-backend.onrender.com";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const response = await fetch(`${API_BASE_URL}/class/arms`, {
+    const response = await fetch(buildExternalApiUrl("/class/arms"), {
       method: "GET",
       headers: getApiHeaders(req),
+      cache: "no-store",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`API Error: ${response.status} - ${errorText}`);
+      console.error(`[Class Arms API] Error: ${response.status} - ${errorText}`);
       return NextResponse.json(
         { error: errorText || "Failed to fetch class arms" },
         { status: response.status }
@@ -20,9 +22,19 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+
+    // Normalize the response - backend might return array directly or wrapped
+    const classArms = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.classArms)
+      ? data.classArms
+      : Array.isArray(data?.data)
+      ? data.data
+      : [];
+
+    return NextResponse.json(classArms);
   } catch (error: any) {
-    console.error("Class Arms API Error:", error);
+    console.error("[Class Arms API] Error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch class arms" },
       { status: 500 }
@@ -33,10 +45,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    
+
     console.log("[Class Arms API] Creating class arm with payload:", JSON.stringify(body, null, 2));
 
-    const response = await fetch(`${API_BASE_URL}/class/arms`, {
+    const response = await fetch(buildExternalApiUrl("/class/arms"), {
       method: "POST",
       headers: getApiHeaders(req),
       body: JSON.stringify(body),

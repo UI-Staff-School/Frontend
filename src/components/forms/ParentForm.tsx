@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useState, useEffect } from "react";
+import { showError, showSuccess } from "@/lib/toast";
 
 const parentRoleOptions = ["Father", "Mother", "Guardian"] as const;
 const religionOptions = ["Christian", "Muslim", "Other"] as const;
@@ -79,7 +80,24 @@ const ParentForm = ({
         });
         if (response.ok) {
           const studentsData = await response.json();
-          setStudents(Array.isArray(studentsData) ? studentsData : []);
+          // Handle multiple response formats
+          let studentsArray: Student[] = [];
+          if (Array.isArray(studentsData)) {
+            studentsArray = studentsData;
+          } else if (Array.isArray(studentsData?.data)) {
+            studentsArray = studentsData.data;
+          } else if (Array.isArray(studentsData?.students)) {
+            studentsArray = studentsData.students;
+          }
+          // Normalize student data
+          studentsArray = studentsArray.map((s: any) => ({
+            ...s,
+            id: String(s.id || s.admissionNo || s._id || ""),
+            admissionNo: s.admissionNo || "",
+            firstName: s.firstName || "",
+            lastName: s.lastName || "",
+          }));
+          setStudents(studentsArray);
         }
       } catch (error) {
         console.error("Failed to fetch students:", error);
@@ -157,36 +175,90 @@ const ParentForm = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to ${type} parent`);
+        const text = await response.text();
+        let errorMessage = `Failed to ${type} parent`;
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorData.message || errorData.detail || errorMessage;
+        } catch {
+          if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
       }
 
-      // If creating/updating succeeded and we have students to link, link them
-      if (type === "create" && linkedStudents.length > 0) {
-        const createdParent = await response.json();
-        for (const student of linkedStudents) {
+      const responseData = await response.json();
+      // Get the parent ID - handle multiple possible field names
+      const parentId = responseData.id || responseData._id || responseData.parentId || data?.id;
+
+      console.log("[ParentForm] Response data:", responseData);
+      console.log("[ParentForm] Using parent ID:", parentId);
+
+      // Handle linking students
+      if (parentId && linkedStudents.length > 0) {
+        // Get existing linked students for comparison (for update mode)
+        const existingStudentIds = (data?.students || []).map((s: LinkedStudent) => s.admissionNo);
+        const newStudentIds = linkedStudents.map((s) => s.admissionNo);
+
+        // Students to link (new ones not in existing)
+        const studentsToLink = linkedStudents.filter(
+          (s) => !existingStudentIds.includes(s.admissionNo)
+        );
+
+        // Link new students
+        for (const student of studentsToLink) {
           try {
-            await fetch("/api/parent/link-student", {
+            console.log(`[ParentForm] Linking student ${student.admissionNo} to parent ${parentId}`);
+            const linkResponse = await fetch("/api/parent/link-student", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
               body: JSON.stringify({
-                parentId: createdParent.id,
-                studentAdmissionNo: student.admissionNo,
+                parentId: parentId,
+                admissionNo: student.admissionNo,
               }),
             });
+
+            if (!linkResponse.ok) {
+              const linkError = await linkResponse.json().catch(() => ({}));
+              console.error(`Failed to link student ${student.admissionNo}:`, linkError);
+              showError(`Failed to link ${student.firstName}: ${linkError.error || 'Unknown error'}`);
+            }
           } catch (linkError) {
             console.error(`Failed to link student ${student.admissionNo}:`, linkError);
           }
         }
+
+        // Students to unlink (in existing but not in current list) - for update mode
+        if (type === "update") {
+          const studentsToUnlink = existingStudentIds.filter(
+            (admNo: string) => !newStudentIds.includes(admNo)
+          );
+
+          for (const admissionNo of studentsToUnlink) {
+            try {
+              console.log(`[ParentForm] Unlinking student ${admissionNo} from parent ${parentId}`);
+              const unlinkResponse = await fetch(`/api/parent/unlink-student/${admissionNo}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+              });
+
+              if (!unlinkResponse.ok) {
+                const unlinkError = await unlinkResponse.json().catch(() => ({}));
+                console.error(`Failed to unlink student ${admissionNo}:`, unlinkError);
+              }
+            } catch (unlinkError) {
+              console.error(`Failed to unlink student ${admissionNo}:`, unlinkError);
+            }
+          }
+        }
       }
 
-      console.log(`Parent ${type === "create" ? "created" : "updated"} successfully`);
+      showSuccess(`Parent ${type === "create" ? "created" : "updated"} successfully`);
       reset();
       window.location.reload();
     } catch (error: any) {
-      console.error(`Error ${type === "create" ? "creating" : "updating"} parent:`, error.message);
-      alert(error.message || "An error occurred. Please try again.");
+      showError(error.message || "An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

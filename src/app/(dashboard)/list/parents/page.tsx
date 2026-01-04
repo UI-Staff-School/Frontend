@@ -5,6 +5,7 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface LinkedStudent {
@@ -70,7 +71,24 @@ const ParentListPage = () => {
         }
 
         const data = await response.json();
-        const parentsArray = Array.isArray(data) ? data : data.data || [];
+        let parentsArray = Array.isArray(data) ? data : data.data || [];
+
+        // Normalize parent data - ensure each parent has an id
+        parentsArray = parentsArray.map((parent: any, index: number) => {
+          const id = String(parent.id || parent._id || parent.parentId || `parent-${index}`);
+          console.log(`[Parents] Parent ${index}:`, {
+            originalId: parent.id,
+            _id: parent._id,
+            parentId: parent.parentId,
+            normalizedId: id,
+            name: `${parent.firstName} ${parent.lastName}`
+          });
+          return {
+            ...parent,
+            id,
+          };
+        });
+
         setParents(parentsArray);
       } catch (err: any) {
         console.error("Error fetching parents:", err);
@@ -140,6 +158,11 @@ const ParentListPage = () => {
       </td>
       <td>
         <div className="flex items-center gap-2">
+          <Link href={`/list/parents/${item.id}`}>
+            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky hover:bg-lamaSkyLight active:scale-95 transition-transform">
+              <Image src="/view.png" alt="" width={16} height={16} />
+            </button>
+          </Link>
           <FormModal table="parent" type="update" data={item} />
           <FormModal table="parent" type="delete" id={item.id} />
         </div>

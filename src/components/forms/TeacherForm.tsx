@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Image from "next/image";
+import { showError, showSuccess } from "@/lib/toast";
 
 const religionOptions = ["Christian", "Muslim", "Other"] as const;
 const qualificationOptions = [
@@ -15,10 +16,13 @@ const qualificationOptions = [
   "Other",
 ] as const;
 
-// Strong password rules: 8+ chars, upper, lower, number, special
+// Password rules: 8+ chars, letters and numbers only
 const passwordSchema = z
   .string()
   .min(8, { message: "Password must be at least 8 characters long!" })
+  .regex(/^[A-Za-z0-9]+$/, {
+    message: "Password must contain only letters and numbers",
+  })
   .regex(/[A-Z]/, {
     message: "Password must contain at least one uppercase letter",
   })
@@ -27,9 +31,6 @@ const passwordSchema = z
   })
   .regex(/[0-9]/, {
     message: "Password must contain at least one number",
-  })
-  .regex(/[^A-Za-z0-9]/, {
-    message: "Password must contain at least one special character",
   });
 
 const schema = z
@@ -141,20 +142,35 @@ const TeacherForm = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to ${type} staff`);
+        const text = await response.text();
+        console.log("[TeacherForm] Raw error response:", text);
+
+        let errorMessage = `Failed to ${type} staff`;
+
+        try {
+          const errorData = JSON.parse(text);
+          console.log("[TeacherForm] Parsed error:", errorData);
+
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.detail) {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors.map((e: any) => e.message || e).join(", ");
+          }
+        } catch {
+          if (text) errorMessage = text;
+        }
+
+        throw new Error(errorMessage);
       }
 
-      // Handle success (close modal, refresh data, etc.)
-      console.log(
-        `Staff ${type === "create" ? "created" : "updated"} successfully`
-      );
-      window.location.reload(); // Simple refresh for now
+      showSuccess(`Staff ${type === "create" ? "created" : "updated"} successfully`);
+      window.location.reload();
     } catch (error: any) {
-      console.error(
-        `Error ${type === "create" ? "creating" : "updating"} staff:`,
-        error.message
-      );
+      showError(error.message || `Failed to ${type} staff`);
     }
   });
 
@@ -469,8 +485,8 @@ const TeacherForm = ({
                 </p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 8 characters and include uppercase,
-                lowercase, number, and special character.
+                Password must be at least 8 characters with uppercase,
+                lowercase, and number. Only letters and numbers allowed.
               </p>
             </div>
 

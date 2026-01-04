@@ -38,6 +38,16 @@ interface AnalyticsData {
       count: number;
     }>;
   } | null;
+  attendanceSummary: {
+    totalPresent: number;
+    totalAbsent: number;
+    attendanceRate: number;
+    weeklyData: Array<{
+      day: string;
+      present: number;
+      absent: number;
+    }>;
+  } | null;
 }
 
 async function fetchWithAuth(url: string, req: NextRequest) {
@@ -67,6 +77,7 @@ export async function GET(req: NextRequest) {
       sessionsData,
       alumniStatsData,
       paymentsData,
+      attendanceData,
     ] = await Promise.all([
       fetchWithAuth(buildExternalApiUrl("/student"), req),
       fetchWithAuth(buildExternalApiUrl("/staff"), req),
@@ -74,6 +85,7 @@ export async function GET(req: NextRequest) {
       fetchWithAuth(buildExternalApiUrl("/session"), req),
       fetchWithAuth(buildExternalApiUrl("/alumni/statistics"), req),
       fetchWithAuth(buildExternalApiUrl("/payment"), req),
+      fetchWithAuth(buildExternalApiUrl("/attendance"), req),
     ]);
 
     // Process students
@@ -174,6 +186,75 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    // Process attendance data
+    let attendanceSummary = null;
+    const attendanceRecords = Array.isArray(attendanceData)
+      ? attendanceData
+      : Array.isArray(attendanceData?.data)
+      ? attendanceData.data
+      : Array.isArray(attendanceData?.attendance)
+      ? attendanceData.attendance
+      : [];
+
+    if (attendanceRecords.length > 0) {
+      // Get last 7 days of data
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      // Filter recent attendance records
+      const recentRecords = attendanceRecords.filter((record: any) => {
+        const recordDate = new Date(record.date || record.attendanceDate || record.createdAt);
+        return recordDate >= sevenDaysAgo;
+      });
+
+      // Count present and absent
+      const totalPresent = recentRecords.filter((r: any) =>
+        r.status?.toLowerCase() === "present" || r.isPresent === true
+      ).length;
+      const totalAbsent = recentRecords.filter((r: any) =>
+        r.status?.toLowerCase() === "absent" || r.isPresent === false
+      ).length;
+
+      // Calculate attendance rate
+      const totalRecords = totalPresent + totalAbsent;
+      const attendanceRate = totalRecords > 0 ? Math.round((totalPresent / totalRecords) * 100) : 0;
+
+      // Group by day of week
+      const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const weeklyData: { [key: string]: { present: number; absent: number } } = {};
+
+      // Initialize all days
+      dayNames.forEach(day => {
+        weeklyData[day] = { present: 0, absent: 0 };
+      });
+
+      // Populate with actual data
+      recentRecords.forEach((record: any) => {
+        const recordDate = new Date(record.date || record.attendanceDate || record.createdAt);
+        const dayName = dayNames[recordDate.getDay()];
+        if (record.status?.toLowerCase() === "present" || record.isPresent === true) {
+          weeklyData[dayName].present++;
+        } else {
+          weeklyData[dayName].absent++;
+        }
+      });
+
+      // Convert to array format (Mon-Fri for school week)
+      const schoolDays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+      const weeklyDataArray = schoolDays.map(day => ({
+        day,
+        present: weeklyData[day]?.present || 0,
+        absent: weeklyData[day]?.absent || 0,
+      }));
+
+      attendanceSummary = {
+        totalPresent,
+        totalAbsent,
+        attendanceRate,
+        weeklyData: weeklyDataArray,
+      };
+    }
+
     const analytics: AnalyticsData = {
       counts: {
         students: students.length,
@@ -205,6 +286,7 @@ export async function GET(req: NextRequest) {
         recentPayments,
       },
       alumniStats,
+      attendanceSummary,
     };
 
     return NextResponse.json(analytics, { status: 200 });
