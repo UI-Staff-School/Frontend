@@ -114,8 +114,37 @@ export async function POST(req: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to create staff");
+      const errorText = await response.text();
+      console.log("[Staff API] Error response:", errorText);
+
+      let errorMessage = "Failed to create staff";
+
+      try {
+        const errorData = JSON.parse(errorText);
+        console.log("[Staff API] Parsed error data:", errorData);
+
+        // Handle different error formats from backend
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.map((e: any) => e.message || e.msg || e).join(", ");
+        } else if (typeof errorData === "string") {
+          errorMessage = errorData;
+        }
+      } catch {
+        // If not JSON, use the text directly
+        if (errorText) errorMessage = errorText;
+      }
+
+      console.log("[Staff API] Final error message:", errorMessage);
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: response.status }
+      );
     }
 
     const data = await response.json();

@@ -8,58 +8,58 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const staffId = params.id;
     console.log(
-      `Fetching staff member: ${params.id} from ${API_BASE_URL}/staff/${params.id}`
+      `Fetching staff member: ${staffId} from ${API_BASE_URL}/staff/${staffId}`
     );
 
-    const response = await fetch(`${API_BASE_URL}/staff/${params.id}`, {
+    // Try fetching by staffId first (e.g., STF001)
+    let response = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
       method: "GET",
       headers: getApiHeaders(req),
     });
 
+    // If not found and the ID looks like a staffId format, also try the staff list endpoint
+    if (!response.ok && response.status === 404) {
+      console.log(`Staff not found by ID, trying to fetch from list...`);
+
+      // Fetch all staff and find by staffId
+      const listResponse = await fetch(`${API_BASE_URL}/staff`, {
+        method: "GET",
+        headers: getApiHeaders(req),
+      });
+
+      if (listResponse.ok) {
+        const staffList = await listResponse.json();
+        const staffArray = Array.isArray(staffList) ? staffList : staffList.data || [];
+        const foundStaff = staffArray.find(
+          (s: any) => s.staffId === staffId || String(s.id) === staffId || s._id === staffId
+        );
+
+        if (foundStaff) {
+          console.log(`Found staff member in list: ${staffId}`);
+          return NextResponse.json(foundStaff);
+        }
+      }
+    }
+
     if (!response.ok) {
       console.error(`API Error: ${response.status}`);
-
-      // Return mock data for specific ID
-      const mockStaff = {
-        id: params.id,
-        staffId: `STF${params.id.padStart(3, "0")}`,
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@school.com",
-        phoneNumber: "+1234567890",
-        address: "123 Main St, City, State",
-        gender: "Male",
-        religion: "Christian",
-        role: "Teacher",
-        qualification: "Masters in Education",
-        dateOfBirth: "1990-05-15T00:00:00.000Z",
-      };
-      return NextResponse.json(mockStaff);
+      return NextResponse.json(
+        { error: "Staff member not found" },
+        { status: 404 }
+      );
     }
 
     const data = await response.json();
-    console.log(`Successfully fetched staff member: ${params.id}`);
+    console.log(`Successfully fetched staff member: ${staffId}`);
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Staff member API Error:", error);
-
-    // Return mock data if there's an error
-    const mockStaff = {
-      id: params.id,
-      staffId: `STF${params.id.padStart(3, "0")}`,
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@school.com",
-      phoneNumber: "+1234567890",
-      address: "123 Main St, City, State",
-      gender: "Male",
-      religion: "Christian",
-      role: "Teacher",
-      qualification: "Masters in Education",
-      dateOfBirth: "1990-05-15T00:00:00.000Z",
-    };
-    return NextResponse.json(mockStaff);
+    return NextResponse.json(
+      { error: error.message || "Failed to fetch staff member" },
+      { status: 500 }
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import ResultTable, { ResultRow } from "@/components/ResultTable";
 import Protected from "@/components/Protected";
 import styles from "@/styles/Result.module.css";
@@ -186,7 +187,7 @@ export default function DashboardResultsPage() {
         </div>
       </div>
 
-      <Protected allowed={["ADMIN", "TEACHER", "STUDENT"]} userRole={role}>
+      <Protected allowed={["ADMIN", "COORDINATOR", "TEACHER"]} userRole={role}>
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.stats}>
@@ -202,6 +203,50 @@ export default function DashboardResultsPage() {
               <p>Students with records</p>
             </div>
           </div>
+          {(role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER") && (
+            <>
+              <Link
+                href="/results/add/multi"
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
+              >
+                <span className="text-xl">📝</span>
+                <div>
+                  <p className="font-semibold">Multi-Subject Entry</p>
+                  <p className="text-xs text-green-100">Enter all subjects at once</p>
+                </div>
+              </Link>
+              <Link
+                href="/list/results/subject"
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg"
+              >
+                <span className="text-xl">📊</span>
+                <div>
+                  <p className="font-semibold">Subject View</p>
+                  <p className="text-xs text-blue-100">Results by subject</p>
+                </div>
+              </Link>
+              <Link
+                href="/list/results/class"
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg"
+              >
+                <span className="text-xl">📋</span>
+                <div>
+                  <p className="font-semibold">Class View</p>
+                  <p className="text-xs text-purple-100">All results by class</p>
+                </div>
+              </Link>
+            </>
+          )}
+          <Link
+            href="/list/results/rankings"
+            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg"
+          >
+            <span className="text-xl">🏆</span>
+            <div>
+              <p className="font-semibold">Class Rankings</p>
+              <p className="text-xs text-indigo-100">View student rankings</p>
+            </div>
+          </Link>
         </div>
 
         <div className={styles.filters}>
@@ -249,9 +294,9 @@ export default function DashboardResultsPage() {
 
         <ResultTable
           rows={rows}
-          showStudent={role === "ADMIN" || role === "TEACHER"}
-          showTeacher={role === "ADMIN" || role === "TEACHER"}
-          canEdit={role === "ADMIN" || role === "TEACHER"}
+          showStudent={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
+          showTeacher={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
+          canEdit={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
           canAddHeadmasterComment={role === "ADMIN"}
           onEdit={handleEdit}
           onDelete={handleDelete}

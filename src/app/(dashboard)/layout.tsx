@@ -9,24 +9,43 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="h-screen flex bg-lamaPurpleLight">
-      {/* LEFT */}
-      <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] p-4 bg-white shadow-sm">
-        <Link
-          href="/"
-          className="flex items-center justify-center lg:justify-start gap-2"
-        >
-          <Image src="/logo.png" alt="logo" width={32} height={32} />
-          <span className="hidden lg:block font-bold text-[#1D3557]">
-            UI Staff School
-          </span>
-        </Link>
-        <Menu />
+    <div className="h-screen flex bg-gray-50">
+      {/* LEFT - Sidebar */}
+      <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] bg-white border-r border-gray-100 flex flex-col">
+        {/* Logo Section */}
+        <div className="p-4 border-b border-gray-100">
+          <Link
+            href="/"
+            className="flex items-center justify-center lg:justify-start gap-3"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20">
+              <Image
+                src="/ui_logo.png"
+                alt="UI Staff School"
+                width={28}
+                height={28}
+                className="w-7 h-7"
+              />
+            </div>
+            <div className="hidden lg:block">
+              <span className="font-bold text-gray-900 text-sm">UI Staff School</span>
+              <p className="text-[10px] text-gray-400">Management Portal</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Menu */}
+        <div className="flex-1 overflow-y-auto">
+          <Menu />
+        </div>
       </div>
-      {/* RIGHT */}
-      <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:w-[86%] bg-[#F7F8FA] overflow-scroll flex flex-col">
+
+      {/* RIGHT - Main Content */}
+      <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:w-[86%] flex flex-col overflow-hidden">
         <Navbar />
-        {children}
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          {children}
+        </main>
       </div>
     </div>
   );

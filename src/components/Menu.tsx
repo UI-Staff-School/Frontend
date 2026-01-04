@@ -1,19 +1,62 @@
 "use client";
-import { role } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { showSuccess } from "@/lib/toast";
+import { useUser } from "@/lib/hooks/useUser";
 
 const menuItems = [
   {
     title: "MENU",
     items: [
-      // {
-      //   icon: "/home.png",
-      //   label: "Home",
-      //   href: "/",
-      //   visible: ["admin", "teacher", "student", "parent"],
-      // },
+      {
+        icon: "/home.png",
+        label: "Dashboard",
+        href: "/admin",
+        visible: ["admin"],
+      },
+      {
+        icon: "/home.png",
+        label: "Dashboard",
+        href: "/teacher",
+        visible: ["teacher"],
+      },
+      {
+        icon: "/home.png",
+        label: "Dashboard",
+        href: "/student",
+        visible: ["student"],
+      },
+      {
+        icon: "/home.png",
+        label: "Dashboard",
+        href: "/parent",
+        visible: ["parent"],
+      },
+      {
+        icon: "/result.png",
+        label: "My Results",
+        href: "/student/results",
+        visible: ["student"],
+      },
+      {
+        icon: "/attendance.png",
+        label: "My Attendance",
+        href: "/student/attendance",
+        visible: ["student"],
+      },
+      {
+        icon: "/finance.png",
+        label: "My Fees",
+        href: "/student/fees",
+        visible: ["student"],
+      },
+      {
+        icon: "/home.png",
+        label: "Dashboard",
+        href: "/admin",
+        visible: ["coordinator"],
+      },
       {
         icon: "/teacher.png",
         label: "Teachers",
@@ -24,13 +67,19 @@ const menuItems = [
         icon: "/student.png",
         label: "Students",
         href: "/list/students",
-        visible: ["admin", "teacher"],
+        visible: ["admin", "coordinator", "teacher"],
       },
       {
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",
-        visible: [],
+        visible: ["admin"],
+      },
+      {
+        icon: "/student.png",
+        label: "My Children",
+        href: "/parent/children",
+        visible: ["parent"],
       },
       {
         icon: "/subject.png",
@@ -42,55 +91,55 @@ const menuItems = [
         icon: "/class.png",
         label: "Classes",
         href: "/list/classes",
-        visible: ["admin", "teacher"],
+        visible: ["admin", "coordinator", "teacher"],
       },
       {
-        icon: "/lesson.png",
-        label: "Lessons",
-        href: "/list/lessons",
-        visible: [],
+        icon: "/calendar.png",
+        label: "Sessions",
+        href: "/list/sessions",
+        visible: ["admin"],
       },
       {
-        icon: "/exam.png",
-        label: "Exams",
-        href: "/list/exams",
-        visible: [],
+        icon: "/student.png",
+        label: "Alumni",
+        href: "/list/alumni",
+        visible: ["admin"],
       },
       {
-        icon: "/assignment.png",
-        label: "Assignments",
-        href: "/list/assignments",
-        visible: [],
+        icon: "/finance.png",
+        label: "Fees",
+        href: "/list/fees",
+        visible: ["admin"],
+      },
+      {
+        icon: "/finance.png",
+        label: "Payments",
+        href: "/list/payments",
+        visible: ["admin"],
       },
       {
         icon: "/result.png",
         label: "Results",
         href: "/list/results",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: ["admin", "coordinator", "teacher"],
+      },
+      {
+        icon: "/result.png",
+        label: "Class Rankings",
+        href: "/list/results/rankings",
+        visible: ["admin", "coordinator", "teacher"],
       },
       {
         icon: "/attendance.png",
         label: "Attendance",
         href: "/list/attendance",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/calendar.png",
-        label: "Events",
-        href: "/list/events",
-        visible: [],
-      },
-      {
-        icon: "/message.png",
-        label: "Messages",
-        href: "/list/messages",
-        visible: [],
+        visible: ["admin", "coordinator", "teacher"],
       },
       {
         icon: "/announcement.png",
         label: "Announcements",
         href: "/list/announcements",
-        visible: [],
+        visible: ["admin", "coordinator", "teacher", "student", "parent"],
       },
     ],
   },
@@ -101,19 +150,13 @@ const menuItems = [
         icon: "/profile.png",
         label: "Profile",
         href: "/profile",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: ["admin", "coordinator", "teacher", "student", "parent"],
       },
       {
         icon: "/setting.png",
         label: "Settings",
         href: "/settings",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/logout.png",
-        label: "Logout",
-        href: "/logout",
-        visible: ["admin", "teacher", "student", "parent"],
+        visible: ["admin"],
       },
     ],
   },
@@ -121,45 +164,97 @@ const menuItems = [
 
 const Menu = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useUser();
+
+  // Get user role (lowercase for matching)
+  const userRole = user?.role?.toLowerCase() || "";
 
   const isActive = (href: string) => {
-    // Handle exact matches
     if (pathname === href) return true;
-
-    // Handle nested routes (e.g., /list/results/add should highlight /list/results)
     if (href !== "/" && pathname.startsWith(href + "/")) return true;
-
     return false;
   };
 
-  return (
-    <div className="mt-4 text-sm">
-      {menuItems.map((i) => (
-        <div className="flex flex-col gap-2" key={i.title}>
-          <span className="hidden lg:block text-gray-400 font-light my-4">
-            {i.title}
-          </span>
-          {i.items.map((item) => {
-            if (item.visible.includes(role)) {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  href={item.href}
-                  key={item.label}
-                  className={`flex items-center justify-center lg:justify-start gap-4 py-2 md:px-2 rounded-md transition-colors ${
-                    active
-                      ? "bg-indigo-100 text-indigo-700 font-medium"
-                      : "text-gray-500 hover:bg-lamaSkyLight hover:text-gray-700"
-                  }`}
-                >
-                  <Image src={item.icon} alt="" width={20} height={20} />
-                  <span className="hidden lg:block">{item.label}</span>
-                </Link>
-              );
-            }
-          })}
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        showSuccess("Logged out successfully");
+        router.push("/sign-in");
+      }
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="px-3 py-4">
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+          ))}
         </div>
-      ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 py-4 text-sm">
+      {menuItems.map((section) => {
+        // Filter items for this section based on user role
+        const visibleItems = section.items.filter((item) =>
+          item.visible.includes(userRole)
+        );
+
+        // Don't render section if no visible items
+        if (visibleItems.length === 0) return null;
+
+        return (
+          <div className="mb-6" key={section.title}>
+            <span className="hidden lg:block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">
+              {section.title}
+            </span>
+            <div className="flex flex-col gap-1">
+              {visibleItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    href={item.href}
+                    key={item.label + item.href}
+                    className={`flex items-center justify-center lg:justify-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 ${
+                      active
+                        ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/20"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className={`w-5 h-5 flex items-center justify-center ${active ? "brightness-0 invert" : ""}`}>
+                      <Image src={item.icon} alt="" width={18} height={18} />
+                    </div>
+                    <span className="hidden lg:block font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Logout Button */}
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center lg:justify-start gap-3 py-2.5 px-3 rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200"
+        >
+          <Image src="/logout.png" alt="" width={18} height={18} />
+          <span className="hidden lg:block font-medium">Logout</span>
+        </button>
+      </div>
     </div>
   );
 };

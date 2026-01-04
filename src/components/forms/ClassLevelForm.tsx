@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { useEffect, useState } from "react";
+import { showError, showSuccess } from "@/lib/toast";
 
 const schema = z.object({
   className: z.string().min(1, { message: "Class name is required!" }),
@@ -214,17 +215,14 @@ const ClassLevelForm = ({
 
       const result = await response.json();
       console.log("Class level created/updated successfully:", result);
-      
+
       // Dispatch custom event to notify other components before reload
       window.dispatchEvent(new CustomEvent("classLevelUpdated", { detail: result }));
-      
+
+      showSuccess(`Class level ${type === "create" ? "created" : "updated"} successfully`);
       window.location.reload();
     } catch (error: any) {
-      console.error(
-        `Error ${type === "create" ? "creating" : "updating"} class level:`,
-        error.message
-      );
-      alert(error.message || `Failed to ${type} class level`);
+      showError(error.message || `Failed to ${type} class level`);
     }
   });
 

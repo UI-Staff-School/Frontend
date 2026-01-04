@@ -170,7 +170,7 @@ export default function ResultsPage() {
           <ResultNavigation userRole={role} currentPage="results" />
         </div>
 
-        <Protected allowed={["ADMIN", "TEACHER", "STUDENT"]} userRole={role}>
+        <Protected allowed={["ADMIN", "COORDINATOR", "TEACHER"]} userRole={role}>
           {error && <div className={styles.error}>{error}</div>}
 
           <div className={styles.stats}>

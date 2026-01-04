@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 
 type Student = {
   id: string;
+  _id?: string;
   admissionNo: string;
   firstName: string;
   lastName: string;
@@ -18,6 +19,34 @@ type Student = {
   address: string;
   classArmId: number;
   yearOfAdmission: string;
+  classArm?: {
+    id: number;
+    name?: string;
+    armName?: string;
+    classLevel?: {
+      id: number;
+      name?: string;
+      className?: string;
+    };
+  };
+};
+
+type ClassArm = {
+  id: number;
+  name?: string;
+  armName?: string;
+  classLevelId?: number;
+  classLevel?: {
+    id: number;
+    name?: string;
+    className?: string;
+  };
+};
+
+type ClassLevel = {
+  id: number;
+  name?: string;
+  className?: string;
 };
 
 const columns = [
@@ -34,16 +63,12 @@ const columns = [
     accessor: "gender",
   },
   {
-    header: "Class Arm",
+    header: "Class",
     accessor: "classArmId",
   },
   {
     header: "Year of Admission",
     accessor: "yearOfAdmission",
-  },
-  {
-    header: "Address",
-    accessor: "address",
   },
   {
     header: "Actions",
@@ -54,6 +79,8 @@ const columns = [
 const StudentListPage = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [classArms, setClassArms] = useState<ClassArm[]>([]);
+  const [classLevels, setClassLevels] = useState<ClassLevel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,18 +91,68 @@ const StudentListPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/student", {
-          credentials: "include",
-        });
-        if (!response.ok) {
+
+        // Fetch students, class arms, and class levels in parallel
+        const [studentsResponse, classArmsResponse, classLevelsResponse] = await Promise.all([
+          fetch("/api/student", { credentials: "include" }),
+          fetch("/api/class/arms", { credentials: "include" }),
+          fetch("/api/class/level", { credentials: "include" }),
+        ]);
+
+        if (!studentsResponse.ok) {
           throw new Error("Failed to fetch students");
         }
-        const data = await response.json();
-        setStudents(data);
-        setFilteredStudents(data);
+
+        const studentsData = await studentsResponse.json();
+
+        // Handle multiple response formats from API
+        let studentsArray: Student[] = [];
+        if (Array.isArray(studentsData)) {
+          studentsArray = studentsData;
+        } else if (Array.isArray(studentsData?.data)) {
+          studentsArray = studentsData.data;
+        } else if (Array.isArray(studentsData?.students)) {
+          studentsArray = studentsData.students;
+        }
+
+        // Handle class arms response
+        let classArmsArray: ClassArm[] = [];
+        if (classArmsResponse.ok) {
+          const armsData = await classArmsResponse.json();
+          if (Array.isArray(armsData)) {
+            classArmsArray = armsData;
+          } else if (Array.isArray(armsData?.data)) {
+            classArmsArray = armsData.data;
+          }
+        }
+
+        // Handle class levels response
+        let classLevelsArray: ClassLevel[] = [];
+        if (classLevelsResponse.ok) {
+          const levelsData = await classLevelsResponse.json();
+          if (Array.isArray(levelsData)) {
+            classLevelsArray = levelsData;
+          } else if (Array.isArray(levelsData?.data)) {
+            classLevelsArray = levelsData.data;
+          }
+        }
+
+        // Normalize student data - ensure each student has an id
+        studentsArray = studentsArray.map((student: any) => ({
+          ...student,
+          id: String(student.id || student.admissionNo || student._id || ""),
+        }));
+
+        console.log("[Students] Fetched students:", studentsArray);
+        console.log("[Students] Fetched class arms:", classArmsArray);
+
+        setStudents(studentsArray);
+        setFilteredStudents(studentsArray);
+        setClassArms(classArmsArray);
+        setClassLevels(classLevelsArray);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -83,7 +160,7 @@ const StudentListPage = () => {
       }
     };
 
-    fetchStudents();
+    fetchData();
   }, []);
 
   // Filter and search functionality
@@ -140,59 +217,109 @@ const StudentListPage = () => {
     setFilteredStudents(filtered);
   }, [students, searchTerm, filterGender, sortBy, sortOrder]);
 
-  const renderRow = (item: Student) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-          <span className="text-sm font-medium text-gray-600">
-            {item.firstName.charAt(0)}
-            {item.lastName.charAt(0)}
+  // Helper function to get class name from class arm
+  const getClassName = (student: Student): string => {
+    // First try to get from nested classArm object in student
+    if (student.classArm) {
+      const levelName = student.classArm.classLevel?.className ||
+                        student.classArm.classLevel?.name || "";
+      const armName = student.classArm.armName || student.classArm.name || "";
+      if (levelName && armName) {
+        return `${levelName} ${armName}`;
+      }
+      if (levelName) return levelName;
+      if (armName) return armName;
+    }
+
+    // Fall back to looking up in classArms array
+    const classArm = classArms.find(
+      (arm) => arm.id === student.classArmId
+    );
+
+    if (classArm) {
+      // Try to get level name from nested classLevel in arm
+      let levelName = classArm.classLevel?.className ||
+                      classArm.classLevel?.name || "";
+
+      // If no nested classLevel, look up in classLevels array
+      if (!levelName && classArm.classLevelId) {
+        const classLevel = classLevels.find(
+          (level) => level.id === classArm.classLevelId
+        );
+        levelName = classLevel?.className || classLevel?.name || "";
+      }
+
+      const armName = classArm.armName || classArm.name || "";
+      if (levelName && armName) {
+        return `${levelName} ${armName}`;
+      }
+      if (levelName) return levelName;
+      if (armName) return armName;
+    }
+
+    return `Class ${student.classArmId}`;
+  };
+
+  const renderRow = (item: Student) => {
+    const className = getClassName(item);
+
+    return (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="flex items-center gap-4 p-4">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-sm font-medium text-gray-600">
+              {item.firstName?.charAt(0) || ""}
+              {item.lastName?.charAt(0) || ""}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <h3 className="font-semibold">
+              {item.firstName} {item.lastName}
+            </h3>
+            <p className="text-xs text-gray-500">{item.religion}</p>
+          </div>
+        </td>
+        <td className="hidden md:table-cell">{item.admissionNo}</td>
+        <td className="hidden md:table-cell">
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              item.gender === "Male"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-pink-100 text-pink-800"
+            }`}
+          >
+            {item.gender}
           </span>
-        </div>
-        <div className="flex flex-col">
-          <h3 className="font-semibold">
-            {item.firstName} {item.lastName}
-          </h3>
-          <p className="text-xs text-gray-500">{item.religion}</p>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.admissionNo}</td>
-      <td className="hidden md:table-cell">
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            item.gender === "Male"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-pink-100 text-pink-800"
-          }`}
-        >
-          {item.gender}
-        </span>
-      </td>
-      <td className="hidden md:table-cell">Class {item.classArmId}</td>
-      <td className="hidden md:table-cell">
-        {new Date(item.yearOfAdmission).getFullYear()}
-      </td>
-      <td className="hidden md:table-cell">{item.address}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          <Link href={`/list/students/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
-              <Image src="/view.png" alt="" width={16} height={16} />
-            </button>
-          </Link>
-          {role === "admin" && (
-            <>
-              <FormModal table="student" type="update" data={item} />
-              <FormModal table="student" type="delete" id={parseInt(item.id)} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
+        </td>
+        <td className="hidden md:table-cell">
+          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+            {className}
+          </span>
+        </td>
+        <td className="hidden md:table-cell">
+          {item.yearOfAdmission ? new Date(item.yearOfAdmission).getFullYear() : "-"}
+        </td>
+        <td>
+          <div className="flex items-center gap-2">
+            <Link href={`/list/students/${item.id}`}>
+              <button className="w-7 h-7 flex items-center justify-center rounded-full bg-lamaSky">
+                <Image src="/view.png" alt="" width={16} height={16} />
+              </button>
+            </Link>
+            {role === "admin" && (
+              <>
+                <FormModal table="student" type="update" data={item} />
+                <FormModal table="student" type="delete" id={parseInt(item.id)} />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
 
   if (loading) {
     return (
