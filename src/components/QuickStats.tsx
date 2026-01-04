@@ -59,7 +59,6 @@ const QuickStats = () => {
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xl">🎓</span>
               </div>
               <div>
                 <p className="text-2xl font-bold text-green-700">

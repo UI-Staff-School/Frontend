@@ -86,7 +86,7 @@ const TermForm = ({
         <div className="text-center border-b border-gray-200 pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl text-white font-bold">
-              {type === "create" ? "+" : "✏️"}
+              {type === "create" ? "+" : "Edit"}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">

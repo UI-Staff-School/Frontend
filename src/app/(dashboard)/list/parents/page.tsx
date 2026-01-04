@@ -1,25 +1,9 @@
-<<<<<<< HEAD
-=======
 "use client";
 
->>>>>>> origin/habyaad_dev
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-<<<<<<< HEAD
-import { parentsData, role } from "@/lib/data";
-import Image from "next/image";
-
-type Parent = {
-  id: number;
-  name: string;
-  email?: string;
-  students: string[];
-  phone: string;
-  address: string;
-};
-=======
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -40,7 +24,6 @@ interface Parent {
   relationship?: string;
   students?: LinkedStudent[];
 }
->>>>>>> origin/habyaad_dev
 
 const columns = [
   {
@@ -48,11 +31,7 @@ const columns = [
     accessor: "info",
   },
   {
-<<<<<<< HEAD
-    header: "Student Names",
-=======
     header: "Children",
->>>>>>> origin/habyaad_dev
     accessor: "students",
     className: "hidden md:table-cell",
   },
@@ -73,8 +52,6 @@ const columns = [
 ];
 
 const ParentListPage = () => {
-<<<<<<< HEAD
-=======
   const [parents, setParents] = useState<Parent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,38 +97,22 @@ const ParentListPage = () => {
     );
   });
 
->>>>>>> origin/habyaad_dev
   const renderRow = (item: Parent) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">
-<<<<<<< HEAD
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item?.email}</p>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.students.join(",")}</td>
-      <td className="hidden md:table-cell">{item.phone}</td>
-      <td className="hidden md:table-cell">{item.address}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          {role === "admin" && (
-            <>
-              <FormModal table="parent" type="update" data={item} />
-              <FormModal table="parent" type="delete" id={item.id} />
-            </>
-          )}
-=======
         <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full flex items-center justify-center">
           <span className="text-white font-semibold text-sm">
-            {item.firstName?.[0]}{item.lastName?.[0]}
+            {item.firstName?.[0]}
+            {item.lastName?.[0]}
           </span>
         </div>
         <div className="flex flex-col">
-          <h3 className="font-semibold">{item.firstName} {item.lastName}</h3>
+          <h3 className="font-semibold">
+            {item.firstName} {item.lastName}
+          </h3>
           <p className="text-xs text-gray-500">{item.email}</p>
           {item.relationship && (
             <span className="text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full w-fit mt-1">
@@ -173,25 +134,26 @@ const ParentListPage = () => {
             ))}
           </div>
         ) : (
-          <span className="text-gray-400 text-xs italic">No children linked</span>
+          <span className="text-gray-400 text-xs italic">
+            No children linked
+          </span>
         )}
       </td>
       <td className="hidden lg:table-cell">{item.phoneNumber}</td>
       <td className="hidden lg:table-cell">
-        <span className="text-sm text-gray-600 line-clamp-1">{item.address}</span>
+        <span className="text-sm text-gray-600 line-clamp-1">
+          {item.address}
+        </span>
       </td>
       <td>
         <div className="flex items-center gap-2">
           <FormModal table="parent" type="update" data={item} />
           <FormModal table="parent" type="delete" id={item.id} />
->>>>>>> origin/habyaad_dev
         </div>
       </td>
     </tr>
   );
 
-<<<<<<< HEAD
-=======
   if (loading) {
     return (
       <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -219,16 +181,12 @@ const ParentListPage = () => {
     );
   }
 
->>>>>>> origin/habyaad_dev
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
         <h1 className="hidden md:block text-lg font-semibold">All Parents</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-<<<<<<< HEAD
-          <TableSearch />
-=======
           <div className="w-full md:w-auto">
             <input
               type="text"
@@ -238,7 +196,6 @@ const ParentListPage = () => {
               className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
           </div>
->>>>>>> origin/habyaad_dev
           <div className="flex items-center gap-4 self-end">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/filter.png" alt="" width={14} height={14} />
@@ -246,16 +203,6 @@ const ParentListPage = () => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-<<<<<<< HEAD
-            {role === "admin" && (
-              <FormModal table="teacher" type="create"/>
-            )}
-          </div>
-        </div>
-      </div>
-      {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={parentsData} />
-=======
             <FormModal table="parent" type="create" />
           </div>
         </div>
@@ -289,7 +236,6 @@ const ParentListPage = () => {
         <Table columns={columns} renderRow={renderRow} data={filteredParents} />
       )}
 
->>>>>>> origin/habyaad_dev
       {/* PAGINATION */}
       <Pagination />
     </div>

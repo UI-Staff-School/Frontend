@@ -138,7 +138,7 @@ const AlumniDetailPage = () => {
               </h1>
               <p className="text-amber-100 mt-1">{alumni.admissionNo}</p>
               <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-white text-sm">
-                <span>🎓</span>
+                <span>Alumni</span>
                 <span>Alumni</span>
               </div>
             </div>
@@ -147,7 +147,6 @@ const AlumniDetailPage = () => {
             <div className="p-6 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
-                  <span className="text-amber-600">📅</span>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Graduation</p>
@@ -159,7 +158,6 @@ const AlumniDetailPage = () => {
 
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <span className="text-blue-600">🏫</span>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Last Class</p>
@@ -172,7 +170,6 @@ const AlumniDetailPage = () => {
               {alumni.email && (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                    <span className="text-green-600">✉️</span>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Email</p>
@@ -186,7 +183,6 @@ const AlumniDetailPage = () => {
               {alumni.phoneNumber && (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <span className="text-purple-600">📱</span>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Phone</p>
@@ -206,7 +202,7 @@ const AlumniDetailPage = () => {
           <div className="bg-white rounded-xl p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <span className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
-                👤
+                Info
               </span>
               Personal Information
             </h2>
@@ -266,7 +262,7 @@ const AlumniDetailPage = () => {
           <div className="bg-white rounded-xl p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-                🎓
+                Academic
               </span>
               Academic Information
             </h2>
@@ -295,7 +291,7 @@ const AlumniDetailPage = () => {
             <div className="bg-white rounded-xl p-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
-                  👨‍👩‍👧
+                  Family
                 </span>
                 Parent/Guardian Information
               </h2>

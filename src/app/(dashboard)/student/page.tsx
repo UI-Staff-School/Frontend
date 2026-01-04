@@ -1,23 +1,3 @@
-<<<<<<< HEAD
-import Announcements from "@/components/Announcements";
-import BigCalendar from "@/components/BigCalender";
-import EventCalendar from "@/components/EventCalendar";
-
-const StudentPage = () => {
-  return (
-    <div className="p-4 flex gap-4 flex-col xl:flex-row">
-      {/* LEFT */}
-      <div className="w-full xl:w-2/3">
-        <div className="h-full bg-white p-4 rounded-md">
-          <h1 className="text-xl font-semibold">Schedule (4A)</h1>
-          <BigCalendar/>
-        </div>
-      </div>
-      {/* RIGHT */}
-      <div className="w-full xl:w-1/3 flex flex-col gap-8">
-        <EventCalendar />
-        <Announcements />
-=======
 "use client";
 
 import { useEffect, useState } from "react";
@@ -184,7 +164,6 @@ const StudentDashboard = () => {
           className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow group"
         >
           <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
-            <span className="text-2xl">📊</span>
           </div>
           <h3 className="font-semibold text-gray-800">My Results</h3>
           <p className="text-sm text-gray-500 mt-1">View your academic results</p>
@@ -195,7 +174,6 @@ const StudentDashboard = () => {
           className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow group"
         >
           <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
-            <span className="text-2xl">📅</span>
           </div>
           <h3 className="font-semibold text-gray-800">Attendance</h3>
           <p className="text-sm text-gray-500 mt-1">Check your attendance record</p>
@@ -217,7 +195,6 @@ const StudentDashboard = () => {
           className="bg-white rounded-xl p-6 hover:shadow-lg transition-shadow group"
         >
           <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
-            <span className="text-2xl">👤</span>
           </div>
           <h3 className="font-semibold text-gray-800">My Profile</h3>
           <p className="text-sm text-gray-500 mt-1">View profile details</p>
@@ -315,14 +292,9 @@ const StudentDashboard = () => {
             </div>
           )}
         </div>
->>>>>>> origin/habyaad_dev
       </div>
     </div>
   );
 };
 
-<<<<<<< HEAD
-export default StudentPage;
-=======
 export default StudentDashboard;
->>>>>>> origin/habyaad_dev

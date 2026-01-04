@@ -45,13 +45,22 @@ const ClassLevelForm = ({
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
   // Hydrate selected subjects from edit data and ensure uniqueness
+  // Backend returns 'subjectsOfferred' (array of objects) or 'subjectIds' (array of numbers)
   useEffect(() => {
-    if (!data?.subjectIds) {
-      setSelectedSubjects([]);
-      return;
+    let subjectIdsArray: any[] = [];
+    
+    // Check for subjectsOfferred first (backend format)
+    if (data?.subjectsOfferred && Array.isArray(data.subjectsOfferred)) {
+      // Extract subjectId from each subject object
+      subjectIdsArray = data.subjectsOfferred
+        .map((subject: any) => subject.subjectId || subject.id)
+        .filter((id: any) => id !== undefined && id !== null);
+    } 
+    // Fallback to subjectIds (if already in array format)
+    else if (data?.subjectIds && Array.isArray(data.subjectIds)) {
+      subjectIdsArray = data.subjectIds;
     }
-
-    const subjectIdsArray = Array.isArray(data.subjectIds) ? data.subjectIds : [];
+    
     const uniqueIds = Array.from(
       new Set(
         subjectIdsArray
@@ -60,7 +69,13 @@ const ClassLevelForm = ({
       )
     );
     setSelectedSubjects(uniqueIds as string[]);
-  }, [data?.subjectIds]);
+    
+    console.log("ClassLevelForm - Loaded subjects:", {
+      subjectsOfferred: data?.subjectsOfferred,
+      subjectIds: data?.subjectIds,
+      extractedIds: uniqueIds,
+    });
+  }, [data?.subjectIds, data?.subjectsOfferred]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -242,7 +257,7 @@ const ClassLevelForm = ({
         <div className="text-center border-b border-gray-200 pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl text-white font-bold">
-              {type === "create" ? "+" : "✏️"}
+              {type === "create" ? "+" : "Edit"}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">

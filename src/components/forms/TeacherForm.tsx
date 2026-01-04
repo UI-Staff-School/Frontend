@@ -162,7 +162,7 @@ const TeacherForm = ({
         <div className="text-center border-b border-gray-200 pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl text-white font-bold">
-              {type === "create" ? "+" : "✏️"}
+              {type === "create" ? "+" : "Edit"}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -179,7 +179,6 @@ const TeacherForm = ({
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">👤</span>
             </div>
             <h2 className="text-lg font-semibold text-gray-900">
               Basic Information
@@ -442,7 +441,7 @@ const TeacherForm = ({
         <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">🔐</span>
+              <span className="text-white text-sm">Lock</span>
             </div>
             <h2 className="text-lg font-semibold text-gray-900">
               Authentication

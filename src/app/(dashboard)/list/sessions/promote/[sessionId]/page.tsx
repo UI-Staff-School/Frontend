@@ -77,7 +77,7 @@ const PromotionPage = () => {
   const handlePromote = async () => {
     if (
       !confirm(
-        "⚠️ WARNING: This action is IRREVERSIBLE!\n\nAre you absolutely sure you want to promote all students to the next class level?\n\nFinal year students will be moved to Alumni and will no longer appear in active student lists."
+        "WARNING: This action is IRREVERSIBLE!\n\nAre you absolutely sure you want to promote all students to the next class level?\n\nFinal year students will be moved to Alumni and will no longer appear in active student lists."
       )
     )
       return;
@@ -145,7 +145,6 @@ const PromotionPage = () => {
         </div>
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-            <span className="text-2xl">🎓</span>
           </div>
           <div>
             <h1 className="text-xl font-semibold text-gray-800">
@@ -161,7 +160,7 @@ const PromotionPage = () => {
       {/* Warning Banner */}
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">⚠️</span>
+          <span className="text-2xl">!</span>
           <div>
             <h3 className="font-semibold text-amber-800">
               Warning: Irreversible Action
@@ -179,7 +178,7 @@ const PromotionPage = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3">
-            <span className="text-xl">❌</span>
+            <span className="text-xl">X</span>
             <p className="text-red-700">{error}</p>
           </div>
         </div>
@@ -189,7 +188,7 @@ const PromotionPage = () => {
       {success && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
           <div className="flex items-center gap-3">
-            <span className="text-xl">✅</span>
+            <span className="text-xl">✓</span>
             <div>
               <p className="text-green-700 font-medium">{success}</p>
               <p className="text-green-600 text-sm mt-1">
@@ -313,7 +312,7 @@ const PromotionPage = () => {
               </>
             ) : (
               <>
-                🎓 Confirm Promotion
+                Confirm Promotion
               </>
             )}
           </button>

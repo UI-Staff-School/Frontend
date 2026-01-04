@@ -4,11 +4,8 @@ import CountChart from "@/components/CountChart";
 import EventCalendar from "@/components/EventCalendar";
 import FinanceChart from "@/components/FinanceChart";
 import UserCard from "@/components/UserCard";
-<<<<<<< HEAD
-=======
 import SessionInfoCard from "@/components/SessionInfoCard";
 import QuickStats from "@/components/QuickStats";
->>>>>>> origin/habyaad_dev
 
 const AdminPage = () => {
   return (
@@ -20,14 +17,9 @@ const AdminPage = () => {
           <UserCard type="student" />
           <UserCard type="teacher" />
           <UserCard type="parent" />
-<<<<<<< HEAD
-          <UserCard type="staff" />
-        </div>
-=======
           <UserCard type="alumni" />
         </div>
 
->>>>>>> origin/habyaad_dev
         {/* MIDDLE CHARTS */}
         <div className="flex gap-4 flex-col lg:flex-row">
           {/* COUNT CHART */}
@@ -39,21 +31,12 @@ const AdminPage = () => {
             <AttendanceChart />
           </div>
         </div>
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/habyaad_dev
         {/* BOTTOM CHART */}
         <div className="w-full h-[500px]">
           <FinanceChart />
         </div>
       </div>
-<<<<<<< HEAD
-      {/* RIGHT */}
-      <div className="w-full lg:w-1/3 flex flex-col gap-8">
-        <EventCalendar />
-        <Announcements/>
-=======
 
       {/* RIGHT */}
       <div className="w-full lg:w-1/3 flex flex-col gap-8">
@@ -68,7 +51,6 @@ const AdminPage = () => {
 
         {/* Announcements */}
         <Announcements />
->>>>>>> origin/habyaad_dev
       </div>
     </div>
   );

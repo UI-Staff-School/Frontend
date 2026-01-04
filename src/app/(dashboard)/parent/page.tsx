@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-import Announcements from "@/components/Announcements";
-import BigCalendar from "@/components/BigCalender";
-
-const ParentPage = () => {
-  return (
-    <div className="flex-1 p-4 flex gap-4 flex-col xl:flex-row">
-      {/* LEFT */}
-      <div className="w-full xl:w-2/3">
-        <div className="h-full bg-white p-4 rounded-md">
-          <h1 className="text-xl font-semibold">Schedule (John Doe)</h1>
-          <BigCalendar />
-        </div>
-      </div>
-      {/* RIGHT */}
-      <div className="w-full xl:w-1/3 flex flex-col gap-8">
-=======
 "use client";
 
 import { useEffect, useState } from "react";
@@ -120,7 +103,6 @@ const ParentPage = () => {
           {children.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">👨‍👧‍👦</span>
               </div>
               <p className="font-medium">No children linked yet</p>
               <p className="text-sm">Contact the school administrator to link your children.</p>
@@ -178,28 +160,24 @@ const ParentPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl p-4 text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-2xl">👨‍👧‍👦</span>
             </div>
             <p className="text-2xl font-bold text-gray-800">{children.length}</p>
             <p className="text-sm text-gray-500">Children</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-2xl">📚</span>
             </div>
             <p className="text-2xl font-bold text-gray-800">-</p>
             <p className="text-sm text-gray-500">Avg. Score</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-2xl">✅</span>
             </div>
             <p className="text-2xl font-bold text-gray-800">-</p>
             <p className="text-sm text-gray-500">Attendance</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center">
             <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <span className="text-2xl">📅</span>
             </div>
             <p className="text-2xl font-bold text-gray-800">-</p>
             <p className="text-sm text-gray-500">Events</p>
@@ -242,7 +220,6 @@ const ParentPage = () => {
         </div>
 
         {/* Announcements */}
->>>>>>> origin/habyaad_dev
         <Announcements />
       </div>
     </div>

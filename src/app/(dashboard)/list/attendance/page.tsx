@@ -2,10 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-<<<<<<< HEAD
-=======
 import Link from "next/link";
->>>>>>> origin/habyaad_dev
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import Pagination from "@/components/Pagination";
@@ -23,8 +20,16 @@ type AttendanceRecord = {
 const columns = [
   { header: "Date", accessor: "date" },
   { header: "Status", accessor: "status" },
-  { header: "Class Arm", accessor: "classArmName", className: "hidden md:table-cell" },
-  { header: "Subject/Period", accessor: "subjectName", className: "hidden md:table-cell" },
+  {
+    header: "Class Arm",
+    accessor: "classArmName",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Subject/Period",
+    accessor: "subjectName",
+    className: "hidden md:table-cell",
+  },
 ];
 
 const AttendancePage = () => {
@@ -175,17 +180,16 @@ const AttendancePage = () => {
         <div>
           <h1 className="text-lg font-semibold">Attendance</h1>
           <p className="text-xs text-gray-500 mt-1">
-            View a student&apos;s attendance records and summary for a given term.
+            View a student&apos;s attendance records and summary for a given
+            term.
           </p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch
-            // placeholder="Search by date, status, class or subject..."
-            // onSearchChange={setSearch}
+          // placeholder="Search by date, status, class or subject..."
+          // onSearchChange={setSearch}
           />
           <div className="flex items-center gap-4 self-end">
-<<<<<<< HEAD
-=======
             <Link
               href="/list/attendance/mark"
               className="px-4 py-2 bg-lamaPurple text-white text-sm font-medium rounded-md hover:bg-lamaPurpleLight transition flex items-center gap-2"
@@ -193,7 +197,6 @@ const AttendancePage = () => {
               <span>+</span>
               Mark Attendance
             </Link>
->>>>>>> origin/habyaad_dev
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/filter.png" alt="" width={14} height={14} />
             </button>
@@ -266,9 +269,11 @@ const AttendancePage = () => {
                 summary.percentage ??
                 summary.rate ??
                 "-"}
-              {typeof (summary.attendanceRate ??
+              {typeof (
+                summary.attendanceRate ??
                 summary.percentage ??
-                summary.rate) === "number"
+                summary.rate
+              ) === "number"
                 ? "%"
                 : ""}
             </p>
@@ -284,7 +289,11 @@ const AttendancePage = () => {
       )}
 
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={filteredAttendance} />
+      <Table
+        columns={columns}
+        renderRow={renderRow}
+        data={filteredAttendance}
+      />
 
       {/* SIMPLE COUNTS */}
       {filteredAttendance.length > 0 && (
@@ -307,5 +316,3 @@ const AttendancePage = () => {
 };
 
 export default AttendancePage;
-
-

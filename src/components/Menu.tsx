@@ -33,6 +33,12 @@ const menuItems = [
         visible: [],
       },
       {
+        icon: "/student.png",
+        label: "Alumni",
+        href: "/list/alumni",
+        visible: ["admin"],
+      },
+      {
         icon: "/subject.png",
         label: "Subjects",
         href: "/list/subjects",
@@ -73,6 +79,24 @@ const menuItems = [
         label: "Attendance",
         href: "/list/attendance",
         visible: ["admin", "teacher", "student"],
+      },
+      {
+        icon: "/finance.png",
+        label: "Fees",
+        href: "/list/fees",
+        visible: ["admin"],
+      },
+      {
+        icon: "/finance.png",
+        label: "Payments",
+        href: "/list/payments",
+        visible: ["admin"],
+      },
+      {
+        icon: "/date.png",
+        label: "Sessions",
+        href: "/list/sessions",
+        visible: ["admin"],
       },
       {
         icon: "/calendar.png",

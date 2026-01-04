@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-<<<<<<< HEAD
-=======
 import Link from "next/link";
->>>>>>> origin/habyaad_dev
 import ResultTable, { ResultRow } from "@/components/ResultTable";
 import Protected from "@/components/Protected";
 import styles from "@/styles/Result.module.css";
@@ -75,12 +72,12 @@ export default function DashboardResultsPage() {
         const resultsData = await resultsRes.json();
 
         // Ensure results is an array before mapping
-        const resultsArray = Array.isArray(resultsData.results) 
-          ? resultsData.results 
-          : Array.isArray(resultsData) 
-          ? resultsData 
+        const resultsArray = Array.isArray(resultsData.results)
+          ? resultsData.results
+          : Array.isArray(resultsData)
+          ? resultsData
           : [];
-        
+
         const mapped = resultsArray.map((x: any) => ({
           id: x.id,
           subjectName: x.subject?.name || x.subjectName || "Unknown",
@@ -88,7 +85,7 @@ export default function DashboardResultsPage() {
           summary: x.summary || 0,
           total: x.total || 0,
           comments: x.comments || "",
-          studentName: x.student 
+          studentName: x.student
             ? `${x.student.surname || ""} ${x.student.firstname || ""} ${
                 x.student.othername || ""
               }`.trim()
@@ -117,12 +114,12 @@ export default function DashboardResultsPage() {
       const resultsData = await resultsRes.json();
 
       // Ensure results is an array before mapping
-      const resultsArray = Array.isArray(resultsData.results) 
-        ? resultsData.results 
-        : Array.isArray(resultsData) 
-        ? resultsData 
+      const resultsArray = Array.isArray(resultsData.results)
+        ? resultsData.results
+        : Array.isArray(resultsData)
+        ? resultsData
         : [];
-      
+
       const mapped = resultsArray.map((x: any) => ({
         id: x.id,
         subjectName: x.subject?.name || x.subjectName || "Unknown",
@@ -130,7 +127,7 @@ export default function DashboardResultsPage() {
         summary: x.summary || 0,
         total: x.total || 0,
         comments: x.comments || "",
-        studentName: x.student 
+        studentName: x.student
           ? `${x.student.surname || ""} ${x.student.firstname || ""} ${
               x.student.othername || ""
             }`.trim()
@@ -149,9 +146,6 @@ export default function DashboardResultsPage() {
     window.location.href = `/results/edit/${result.id}`;
   };
 
-<<<<<<< HEAD
-  // Delete is now handled by FormModal in ResultTable component
-=======
   const handleDelete = async (result: ResultRow) => {
     if (!confirm("Are you sure you want to delete this result?")) return;
 
@@ -169,7 +163,6 @@ export default function DashboardResultsPage() {
       setError(err.message);
     }
   };
->>>>>>> origin/habyaad_dev
 
   const handleHeadmasterComment = (result: ResultRow) => {
     window.location.href = `/results/headmaster/${result.id}`;
@@ -189,7 +182,8 @@ export default function DashboardResultsPage() {
           </span>
           <h1 className={styles.pageTitle}>Term Results Overview</h1>
           <p className={styles.pageSubtitle}>
-            Filter by student and term to review continuous assessment, exams, and final scores.
+            Filter by student and term to review continuous assessment, exams,
+            and final scores.
           </p>
         </div>
       </div>
@@ -210,25 +204,23 @@ export default function DashboardResultsPage() {
               <p>Students with records</p>
             </div>
           </div>
-<<<<<<< HEAD
-=======
           {(role === "ADMIN" || role === "TEACHER") && (
             <>
               <Link
                 href="/results/add/multi"
                 className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
               >
-                <span className="text-xl">📝</span>
                 <div>
                   <p className="font-semibold">Multi-Subject Entry</p>
-                  <p className="text-xs text-green-100">Enter all subjects at once</p>
+                  <p className="text-xs text-green-100">
+                    Enter all subjects at once
+                  </p>
                 </div>
               </Link>
               <Link
                 href="/list/results/subject"
                 className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg"
               >
-                <span className="text-xl">📊</span>
                 <div>
                   <p className="font-semibold">Subject View</p>
                   <p className="text-xs text-blue-100">Results by subject</p>
@@ -238,10 +230,11 @@ export default function DashboardResultsPage() {
                 href="/list/results/class"
                 className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg"
               >
-                <span className="text-xl">📋</span>
                 <div>
                   <p className="font-semibold">Class View</p>
-                  <p className="text-xs text-purple-100">All results by class</p>
+                  <p className="text-xs text-purple-100">
+                    All results by class
+                  </p>
                 </div>
               </Link>
             </>
@@ -250,13 +243,11 @@ export default function DashboardResultsPage() {
             href="/list/results/rankings"
             className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg"
           >
-            <span className="text-xl">🏆</span>
             <div>
               <p className="font-semibold">Class Rankings</p>
               <p className="text-xs text-indigo-100">View student rankings</p>
             </div>
           </Link>
->>>>>>> origin/habyaad_dev
         </div>
 
         <div className={styles.filters}>
@@ -309,17 +300,10 @@ export default function DashboardResultsPage() {
           canEdit={role === "ADMIN" || role === "TEACHER"}
           canAddHeadmasterComment={role === "ADMIN"}
           onEdit={handleEdit}
-<<<<<<< HEAD
-=======
           onDelete={handleDelete}
->>>>>>> origin/habyaad_dev
           onHeadmasterComment={handleHeadmasterComment}
         />
       </Protected>
     </div>
   );
 }
-
-
-
-

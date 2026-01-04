@@ -271,7 +271,6 @@ export default function MultiSubjectResultPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl p-6 text-white mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">📝</span>
           <div>
             <h1 className="text-2xl font-bold">Multi-Subject Result Entry</h1>
             <p className="text-indigo-100">

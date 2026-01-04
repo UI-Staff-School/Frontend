@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { paths } from "@/lib/paths";
@@ -10,12 +10,7 @@ const LogoutPage = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Auto-logout on mount
-    handleLogout();
-  }, []);
-
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       setLoggingOut(true);
       setError(null);
@@ -58,7 +53,12 @@ const LogoutPage = () => {
     } finally {
       setLoggingOut(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // Auto-logout on mount
+    handleLogout();
+  }, [handleLogout]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">

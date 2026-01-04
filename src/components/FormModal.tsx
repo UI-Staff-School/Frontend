@@ -18,7 +18,15 @@ export type TableKey =
   | "subject"
   | "classLevel"
   | "classArm"
-  | "result";
+  | "result"
+  | "parent"
+  | "announcement"
+  | "assignment"
+  | "event"
+  | "exam"
+  | "fee"
+  | "lesson"
+  | "session";
 
 export type FormType = "create" | "update" | "delete";
 
@@ -96,6 +104,70 @@ const modalConfig: ModalConfig = {
       title: "Delete Result",
       message:
         "Are you sure you want to delete this result? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  parent: {
+    delete: {
+      endpoint: (id) => `/api/parent/${id}`,
+      title: "Delete Parent",
+      message:
+        "Are you sure you want to delete this parent? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  announcement: {
+    delete: {
+      endpoint: (id) => `/api/announcement/${id}`,
+      title: "Delete Announcement",
+      message:
+        "Are you sure you want to delete this announcement? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  assignment: {
+    delete: {
+      endpoint: (id) => `/api/assignment/${id}`,
+      title: "Delete Assignment",
+      message:
+        "Are you sure you want to delete this assignment? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  event: {
+    delete: {
+      endpoint: (id) => `/api/event/${id}`,
+      title: "Delete Event",
+      message:
+        "Are you sure you want to delete this event? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  exam: {
+    delete: {
+      endpoint: (id) => `/api/exam/${id}`,
+      title: "Delete Exam",
+      message:
+        "Are you sure you want to delete this exam? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  fee: {
+    delete: {
+      endpoint: (id) => `/api/fee/${id}`,
+      title: "Delete Fee",
+      message:
+        "Are you sure you want to delete this fee? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  lesson: {
+    delete: {
+      endpoint: (id) => `/api/lesson/${id}`,
+      title: "Delete Lesson",
+      message:
+        "Are you sure you want to delete this lesson? This action cannot be undone and all associated data will be permanently removed.",
+    },
+  },
+  session: {
+    delete: {
+      endpoint: (id) => `/api/session/${id}`,
+      title: "Delete Session",
+      message:
+        "Are you sure you want to delete this session? This action cannot be undone and all associated data will be permanently removed.",
     },
   },
 };
@@ -220,7 +292,7 @@ const FormModal = ({
       return (
         <div className="p-8 text-center">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl">⚠️</span>
+            <span className="text-3xl">!</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Invalid Delete Request
@@ -243,7 +315,7 @@ const FormModal = ({
     return (
       <div className="p-8 text-center">
         <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="text-3xl text-white">🗑️</span>
+          <span className="text-3xl text-white">X</span>
         </div>
 
         <h2 className="text-2xl font-bold text-gray-900 mb-4">{title}</h2>
@@ -287,7 +359,7 @@ const FormModal = ({
       return (
         <div className="p-8 text-center">
           <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl">⚠️</span>
+            <span className="text-3xl">!</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Form Not Available
