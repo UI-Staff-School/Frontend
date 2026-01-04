@@ -339,22 +339,17 @@ const OfflinePaymentModal = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [fees, setFees] = useState<Array<{ id: string | number; name: string; amount: number }>>([]);
+  // Hardcoded fee options for offline payment
+  const feeOptions = [
+    { id: 1, name: "Admission / Acceptance", amount: 0 },
+    { id: 2, name: "Tuition", amount: 0 },
+    { id: 3, name: "Registration", amount: 0 },
+    { id: 4, name: "Uniform", amount: 0 },
+    { id: 5, name: "Books & Learning Materials", amount: 0 },
+    { id: 6, name: "Exams / Assessment", amount: 0 },
+  ];
 
-  useEffect(() => {
-    // Fetch fees for dropdown
-    fetch("/api/payment/fee", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => {
-        const feeList = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-          ? data.data
-          : [];
-        setFees(feeList);
-      })
-      .catch(console.error);
-  }, []);
+  const [fees] = useState<Array<{ id: string | number; name: string; amount: number }>>(feeOptions);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -436,7 +431,7 @@ const OfflinePaymentModal = ({
               onChange={(e) => {
                 setFeeId(e.target.value);
                 const selectedFee = fees.find((f) => String(f.id) === e.target.value);
-                if (selectedFee) {
+                if (selectedFee && selectedFee.amount > 0) {
                   setAmount(String(selectedFee.amount));
                 }
               }}
@@ -445,7 +440,7 @@ const OfflinePaymentModal = ({
               <option value="">Select fee</option>
               {fees.map((fee) => (
                 <option key={fee.id} value={fee.id}>
-                  {fee.name} - ₦{fee.amount?.toLocaleString()}
+                  {fee.name}
                 </option>
               ))}
             </select>
