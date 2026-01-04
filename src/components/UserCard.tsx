@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface UserCardProps {
   type: "student" | "teacher" | "parent" | "staff" | "alumni";
@@ -25,11 +25,7 @@ const UserCard = ({ type }: UserCardProps) => {
   const [sessionName, setSessionName] = useState<string>("2024/25");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const res = await fetch("/api/analytics", { credentials: "include" });
       if (res.ok) {
@@ -64,7 +60,11 @@ const UserCard = ({ type }: UserCardProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [type]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   const getIcon = () => {
     switch (type) {
