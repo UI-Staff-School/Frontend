@@ -50,6 +50,7 @@ const ClassRankingsPage = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedStudent, setExpandedStudent] = useState<string | number | null>(null);
+  const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
 
   useEffect(() => {
     fetchInitialData();
@@ -180,6 +181,37 @@ const ClassRankingsPage = () => {
   const selectedClassArm = classArms.find((c) => String(c.id) === selectedClass);
   const selectedTermObj = terms.find((t) => String(t.id) === selectedTerm);
 
+  const handleExport = async (format: "pdf" | "xlsx") => {
+    if (!selectedClass || !selectedTerm || rankings.length === 0) return;
+
+    try {
+      setExporting(format);
+      const response = await fetch(
+        `/api/export/result/class/${selectedClass}/term/${selectedTerm}/ranking?format=${format}`,
+        { credentials: "include" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to export rankings");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `class-rankings-${selectedClassArm?.name || "class"}-${selectedTermObj?.name || "term"}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      console.error("Export error:", err);
+      setError(err.message || "Failed to export rankings");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   // Calculate class statistics
   const classStats = {
     totalStudents: rankings.length,
@@ -292,32 +324,67 @@ const ClassRankingsPage = () => {
 
       {/* Class Statistics */}
       {rankings.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-indigo-600">
-              {classStats.totalStudents}
-            </p>
-            <p className="text-sm text-gray-500">Students Ranked</p>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-white rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-indigo-600">
+                {classStats.totalStudents}
+              </p>
+              <p className="text-sm text-gray-500">Students Ranked</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">
+                {classStats.classAverage.toFixed(1)}
+              </p>
+              <p className="text-sm text-gray-500">Class Average</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-yellow-600">
+                {classStats.highestScore}
+              </p>
+              <p className="text-sm text-gray-500">Highest Total</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-orange-600">
+                {classStats.lowestScore}
+              </p>
+              <p className="text-sm text-gray-500">Lowest Total</p>
+            </div>
           </div>
-          <div className="bg-white rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {classStats.classAverage.toFixed(1)}
-            </p>
-            <p className="text-sm text-gray-500">Class Average</p>
+
+          {/* Export Buttons */}
+          <div className="flex items-center justify-end gap-3 mb-6">
+            <span className="text-sm text-gray-500">Export:</span>
+            <button
+              onClick={() => handleExport("pdf")}
+              disabled={exporting !== null}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              {exporting === "pdf" ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                </svg>
+              )}
+              PDF
+            </button>
+            <button
+              onClick={() => handleExport("xlsx")}
+              disabled={exporting !== null}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+              {exporting === "xlsx" ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                </svg>
+              )}
+              Excel
+            </button>
           </div>
-          <div className="bg-white rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">
-              {classStats.highestScore}
-            </p>
-            <p className="text-sm text-gray-500">Highest Total</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-orange-600">
-              {classStats.lowestScore}
-            </p>
-            <p className="text-sm text-gray-500">Lowest Total</p>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Rankings List */}

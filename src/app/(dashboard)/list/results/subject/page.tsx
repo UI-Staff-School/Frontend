@@ -195,7 +195,7 @@ export default function SubjectResultsPage() {
         </div>
       </div>
 
-      <Protected allowed={["ADMIN", "TEACHER"]} userRole={role}>
+      <Protected allowed={["ADMIN", "COORDINATOR", "TEACHER"]} userRole={role}>
         {/* Filters */}
         <div className="bg-white rounded-xl p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">

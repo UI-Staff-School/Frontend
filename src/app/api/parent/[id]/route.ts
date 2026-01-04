@@ -10,19 +10,67 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log(`[Parent API] Fetching parent with ID: ${params.id}`);
+    const parentId = params.id;
+    console.log(`[Parent API] Fetching parent with ID: ${parentId}`);
 
-    const response = await fetch(`${API_BASE_URL}/parent/${params.id}`, {
+    // Check if this is an index-based ID (parent-0, parent-1, etc.)
+    const indexMatch = parentId.match(/^parent-(\d+)$/);
+    if (indexMatch) {
+      const index = parseInt(indexMatch[1], 10);
+      console.log(`[Parent API] Index-based ID detected, fetching from list at index ${index}`);
+
+      const listResponse = await fetch(`${API_BASE_URL}/parent`, {
+        method: "GET",
+        headers: getApiHeaders(req),
+      });
+
+      if (listResponse.ok) {
+        const parentList = await listResponse.json();
+        const parentsArray = Array.isArray(parentList) ? parentList : parentList.data || [];
+
+        if (index >= 0 && index < parentsArray.length) {
+          console.log(`[Parent API] Found parent at index ${index}`);
+          return NextResponse.json(parentsArray[index]);
+        }
+      }
+
+      return NextResponse.json(
+        { error: "Parent not found" },
+        { status: 404 }
+      );
+    }
+
+    // Try fetching by ID directly
+    let response = await fetch(`${API_BASE_URL}/parent/${parentId}`, {
       method: "GET",
       headers: getApiHeaders(req),
     });
 
+    // If not found, try fetching from list
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[Parent API] Error: ${response.status} - ${errorText}`);
+      console.log(`[Parent API] Parent not found by ID, trying to fetch from list...`);
+
+      const listResponse = await fetch(`${API_BASE_URL}/parent`, {
+        method: "GET",
+        headers: getApiHeaders(req),
+      });
+
+      if (listResponse.ok) {
+        const parentList = await listResponse.json();
+        const parentsArray = Array.isArray(parentList) ? parentList : parentList.data || [];
+        const foundParent = parentsArray.find(
+          (p: any) => String(p.id) === parentId || p._id === parentId || p.parentId === parentId
+        );
+
+        if (foundParent) {
+          console.log(`[Parent API] Found parent in list: ${parentId}`);
+          return NextResponse.json(foundParent);
+        }
+      }
+
       return NextResponse.json(
-        { error: errorText || "Failed to fetch parent" },
-        { status: response.status }
+        { error: "Parent not found" },
+        { status: 404 }
       );
     }
 

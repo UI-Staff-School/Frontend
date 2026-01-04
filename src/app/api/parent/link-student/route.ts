@@ -10,22 +10,45 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log("[Parent API] Linking student with payload:", JSON.stringify(body, null, 2));
 
+    // Normalize the payload to match what the backend might expect
+    const payload = {
+      parentId: body.parentId,
+      admissionNo: body.admissionNo || body.studentAdmissionNo,
+    };
+
+    console.log("[Parent API] Normalized payload:", JSON.stringify(payload, null, 2));
+
     const response = await fetch(`${API_BASE_URL}/parent/link-student`, {
       method: "POST",
       headers: getApiHeaders(req),
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
+    const responseText = await response.text();
+    console.log("[Parent API] Link student response status:", response.status);
+    console.log("[Parent API] Link student response body:", responseText);
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("[Parent API] Link student error:", errorData);
+      let errorMessage = "Failed to link student";
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage;
+      } catch {
+        if (responseText) errorMessage = responseText;
+      }
+      console.error("[Parent API] Link student error:", errorMessage);
       return NextResponse.json(
-        { error: errorData.message || errorData.error || "Failed to link student" },
+        { error: errorMessage },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
+    let data = { success: true };
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      // Response might not be JSON
+    }
     console.log("[Parent API] Successfully linked student:", data);
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {

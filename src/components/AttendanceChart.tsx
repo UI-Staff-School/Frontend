@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import {
   BarChart,
   Bar,
@@ -7,171 +6,147 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type ChartDatum = { name: string; present: number; absent: number };
 
 const FALLBACK_DATA: ChartDatum[] = [
-  { name: "Mon", present: 60, absent: 40 },
-  { name: "Tue", present: 70, absent: 60 },
-  { name: "Wed", present: 90, absent: 75 },
-  { name: "Thu", present: 90, absent: 75 },
-  { name: "Fri", present: 65, absent: 55 },
+  { name: "Mon", present: 0, absent: 0 },
+  { name: "Tue", present: 0, absent: 0 },
+  { name: "Wed", present: 0, absent: 0 },
+  { name: "Thu", present: 0, absent: 0 },
+  { name: "Fri", present: 0, absent: 0 },
 ];
 
-const DEFAULT_STUDENT_ID =
-  process.env.NEXT_PUBLIC_ATTENDANCE_SUMMARY_STUDENT_ID;
-const DEFAULT_TERM_ID = process.env.NEXT_PUBLIC_ATTENDANCE_SUMMARY_TERM_ID;
-
-const normalizeSummary = (payload: any): ChartDatum[] => {
-  if (!payload) return [];
-
-  if (Array.isArray(payload?.dailyBreakdown)) {
-    return payload.dailyBreakdown.map((entry: any, idx: number) => ({
-      name:
-        entry.day ||
-        entry.label ||
-        `Day ${idx + 1}`,
-      present:
-        entry.present ??
-        entry.presentCount ??
-        entry.present_percentage ??
-        0,
-      absent:
-        entry.absent ??
-        entry.absentCount ??
-        entry.absent_percentage ??
-        0,
-    }));
-  }
-
-  if (Array.isArray(payload?.data)) {
-    const buckets = new Map<string, ChartDatum>();
-    payload.data.forEach((record: any) => {
-      const rawDate =
-        record.date ||
-        record.attendanceDate ||
-        record.createdAt ||
-        record.day;
-      const date = rawDate ? new Date(rawDate) : null;
-      const name = date
-        ? date.toLocaleDateString("en-US", { weekday: "short" })
-        : record.day || "Day";
-      const key = `${name}-${date?.toISOString() || ""}`;
-      const bucket = buckets.get(key) || { name, present: 0, absent: 0 };
-      const status =
-        record.status ||
-        record.attendanceStatus ||
-        (record.isPresent ? "Present" : "Absent");
-      if (String(status).toLowerCase() === "present" || record.isPresent) {
-        bucket.present += 1;
-      } else {
-        bucket.absent += 1;
-      }
-      buckets.set(key, bucket);
-    });
-    return Array.from(buckets.values());
-  }
-
-  if (
-    typeof payload.totalPresent === "number" ||
-    typeof payload.totalAbsent === "number"
-  ) {
-    return [
-      {
-        name: payload.label || "Summary",
-        present: payload.totalPresent ?? 0,
-        absent: payload.totalAbsent ?? 0,
-      },
-    ];
-  }
-
-  return [];
-};
+interface AttendanceSummary {
+  totalPresent: number;
+  totalAbsent: number;
+  attendanceRate: number;
+  weeklyData: Array<{
+    day: string;
+    present: number;
+    absent: number;
+  }>;
+}
 
 const AttendanceChart = () => {
   const [data, setData] = useState<ChartDatum[]>(FALLBACK_DATA);
-  const [loading, setLoading] = useState(false);
-
-  const canFetch = useMemo(
-    () => Boolean(DEFAULT_STUDENT_ID && DEFAULT_TERM_ID),
-    []
-  );
+  const [summary, setSummary] = useState<{ rate: number; total: number } | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!canFetch) return;
-
-    const fetchSummary = async () => {
-      setLoading(true);
+    const fetchAttendance = async () => {
       try {
-        const response = await fetch(
-          `/api/attendance/student/${DEFAULT_STUDENT_ID}/term/${DEFAULT_TERM_ID}/summary`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch attendance summary");
-        }
-        const payload = await response.json();
-        const normalized = normalizeSummary(payload);
-        if (normalized.length) {
-          setData(normalized);
+        const response = await fetch("/api/analytics", { credentials: "include" });
+        if (response.ok) {
+          const analytics = await response.json();
+          if (analytics.attendanceSummary) {
+            const attendanceData: AttendanceSummary = analytics.attendanceSummary;
+
+            // Map weekly data to chart format
+            const chartData = attendanceData.weeklyData.map((item) => ({
+              name: item.day,
+              present: item.present,
+              absent: item.absent,
+            }));
+
+            setData(chartData.length > 0 ? chartData : FALLBACK_DATA);
+            setSummary({
+              rate: attendanceData.attendanceRate,
+              total: attendanceData.totalPresent + attendanceData.totalAbsent,
+            });
+          }
         }
       } catch (error) {
-        console.error("[AttendanceChart] Falling back to static data:", error);
-        setData(FALLBACK_DATA);
+        console.error("[AttendanceChart] Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSummary();
-  }, [canFetch]);
+    fetchAttendance();
+  }, []);
+
+  const hasData = data.some(d => d.present > 0 || d.absent > 0);
 
   return (
-    <div className="bg-white rounded-lg p-4 h-full">
-      <div className="flex justify-between items-center">
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-lg font-semibold">Attendance</h1>
-          {loading && (
-            <p className="text-xs text-gray-400 mt-1">Refreshing live data…</p>
-          )}
+          <h1 className="text-base font-semibold text-gray-900">Weekly Attendance</h1>
+          <p className="text-xs text-gray-500">
+            {loading ? "Loading attendance data..." :
+             summary ? `${summary.rate}% attendance rate (${summary.total} records)` :
+             "Present vs Absent overview"}
+          </p>
         </div>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-xs text-gray-600">Present</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+            <span className="text-xs text-gray-600">Absent</span>
+          </div>
+        </div>
       </div>
-      <ResponsiveContainer width="100%" height="90%">
-        <BarChart width={500} height={300} data={data} barSize={20}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ddd" />
-          <XAxis
-            dataKey="name"
-            axisLine={false}
-            tick={{ fill: "#d1d5db" }}
-            tickLine={false}
-          />
-          <YAxis axisLine={false} tick={{ fill: "#d1d5db" }} tickLine={false} />
-          <Tooltip
-            contentStyle={{ borderRadius: "10px", borderColor: "lightgray" }}
-          />
-          <Legend
-            align="left"
-            verticalAlign="top"
-            wrapperStyle={{ paddingTop: "20px", paddingBottom: "40px" }}
-          />
-          <Bar
-            dataKey="present"
-            fill="#FAE27C"
-            legendType="circle"
-            radius={[10, 10, 0, 0]}
-          />
-          <Bar
-            dataKey="absent"
-            fill="#C3EBFA"
-            legendType="circle"
-            radius={[10, 10, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-green-200 border-t-green-500 rounded-full animate-spin"></div>
+        </div>
+      ) : !hasData ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+          <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-sm font-medium">No attendance data</p>
+          <p className="text-xs mt-1">Data will appear once attendance is recorded</p>
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} barSize={24} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tick={{ fill: "#6b7280", fontSize: 12 }}
+                tickLine={false}
+              />
+              <YAxis
+                axisLine={false}
+                tick={{ fill: "#6b7280", fontSize: 12 }}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "12px",
+                  border: "none",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                  padding: "12px"
+                }}
+                cursor={{ fill: '#f3f4f6' }}
+              />
+              <Bar
+                dataKey="present"
+                name="Present"
+                fill="#22c55e"
+                radius={[6, 6, 0, 0]}
+              />
+              <Bar
+                dataKey="absent"
+                name="Absent"
+                fill="#f87171"
+                radius={[6, 6, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 };

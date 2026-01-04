@@ -24,8 +24,28 @@ type ClassArm = {
   teacherId: string;
   classLevel?: {
     id: number;
+<<<<<<< HEAD
     className: string;
   };
+=======
+    name?: string;
+    className?: string;
+  };
+  teacher?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    staffId?: string;
+  };
+};
+
+type Staff = {
+  id: string;
+  staffId: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+>>>>>>> habyaad_dev
 };
 
 const classLevelColumns = [
@@ -34,7 +54,7 @@ const classLevelColumns = [
     accessor: "className",
   },
   {
-    header: "Coordinator ID",
+    header: "Coordinator",
     accessor: "coordinatorId",
     className: "hidden md:table-cell",
   },
@@ -60,12 +80,16 @@ const classArmColumns = [
     className: "hidden md:table-cell",
   },
   {
+<<<<<<< HEAD
     header: "Subjects Count",
     accessor: "subjects",
     className: "hidden md:table-cell",
   },
   {
     header: "Teacher ID",
+=======
+    header: "Teacher",
+>>>>>>> habyaad_dev
     accessor: "teacherId",
     className: "hidden md:table-cell",
   },
@@ -79,6 +103,7 @@ const ClassListPage = () => {
   const [activeTab, setActiveTab] = useState<"levels" | "arms">("levels");
   const [classLevels, setClassLevels] = useState<ClassLevel[]>([]);
   const [classArms, setClassArms] = useState<ClassArm[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [filteredLevels, setFilteredLevels] = useState<ClassLevel[]>([]);
   const [filteredArms, setFilteredArms] = useState<ClassArm[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,9 +116,10 @@ const ClassListPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [levelsResponse, armsResponse] = await Promise.all([
+        const [levelsResponse, armsResponse, staffResponse] = await Promise.all([
           fetch("/api/class/level", { credentials: "include" }),
           fetch("/api/class/arms", { credentials: "include" }),
+          fetch("/api/staff", { credentials: "include" }),
         ]);
 
         if (!levelsResponse.ok) {
@@ -108,6 +134,13 @@ const ClassListPage = () => {
         let levelsData = await levelsResponse.json();
         const armsData = await armsResponse.json();
 
+        // Handle staff response (don't fail if it errors)
+        let staffData: Staff[] = [];
+        if (staffResponse.ok) {
+          const staffPayload = await staffResponse.json();
+          staffData = Array.isArray(staffPayload) ? staffPayload : [];
+        }
+
         // Normalize class levels to ensure consistent ID field
         if (Array.isArray(levelsData)) {
           const { normalizeClassLevels } = await import(
@@ -118,6 +151,7 @@ const ClassListPage = () => {
 
         setClassLevels(Array.isArray(levelsData) ? levelsData : []);
         setClassArms(Array.isArray(armsData) ? armsData : []);
+        setStaff(staffData);
         setFilteredLevels(Array.isArray(levelsData) ? levelsData : []);
         setFilteredArms(Array.isArray(armsData) ? armsData : []);
       } catch (err: any) {
@@ -138,11 +172,21 @@ const ClassListPage = () => {
       let filtered = [...safeLevels];
 
       if (searchTerm) {
-        filtered = filtered.filter(
-          (level) =>
+        filtered = filtered.filter((level) => {
+          // Get coordinator name for searching
+          const coordinator = staff.find(
+            (s) => String(s.id) === String(level.coordinatorId) || String(s.staffId) === String(level.coordinatorId)
+          );
+          const coordinatorName = coordinator
+            ? `${coordinator.firstName || ""} ${coordinator.lastName || ""}`.trim()
+            : "";
+
+          return (
             level.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            level.coordinatorId.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+            level.coordinatorId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            coordinatorName.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        });
       }
 
       filtered.sort((a, b) => {
@@ -177,11 +221,35 @@ const ClassListPage = () => {
       let filtered = [...safeArms];
 
       if (searchTerm) {
-        filtered = filtered.filter(
-          (arm) =>
+        filtered = filtered.filter((arm) => {
+          // Get class level name for searching
+          const classLevelName =
+            arm.classLevel?.className ||
+            arm.classLevel?.name ||
+            classLevels.find((l) => String(l.id) === String(arm.classLevelId))
+              ?.className ||
+            "";
+
+          // Get teacher name for searching
+          let teacherName = "";
+          if (arm.teacher) {
+            teacherName = `${arm.teacher.firstName || ""} ${arm.teacher.lastName || ""}`.trim();
+          } else {
+            const teacher = staff.find(
+              (s) => String(s.id) === String(arm.teacherId) || String(s.staffId) === String(arm.teacherId)
+            );
+            if (teacher) {
+              teacherName = `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim();
+            }
+          }
+
+          return (
             arm.armName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            arm.teacherId.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+            arm.teacherId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            classLevelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            teacherName.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        });
       }
 
       filtered.sort((a, b) => {
@@ -197,8 +265,9 @@ const ClassListPage = () => {
 
       setFilteredArms(filtered);
     }
-  }, [classLevels, classArms, searchTerm, sortBy, sortOrder, activeTab]);
+  }, [classLevels, classArms, staff, searchTerm, sortBy, sortOrder, activeTab]);
 
+<<<<<<< HEAD
   const renderLevelRow = (item: ClassLevel) => (
     <tr
       key={item.id}
@@ -253,6 +322,95 @@ const ClassListPage = () => {
     // Get subject count from the parent class level
     // Backend returns 'subjectsOfferred' (array of objects) or 'subjectIds' (array of numbers)
     const subjectCount = classLevel?.subjectsOfferred?.length || classLevel?.subjectIds?.length || 0;
+=======
+  // Helper function to get coordinator name
+  const getCoordinatorName = (coordinatorId: string): string => {
+    const coordinator = staff.find(
+      (s) => String(s.id) === String(coordinatorId) || String(s.staffId) === String(coordinatorId)
+    );
+    if (coordinator) {
+      return `${coordinator.firstName || ""} ${coordinator.lastName || ""}`.trim() || coordinatorId;
+    }
+    return coordinatorId;
+  };
+
+  const renderLevelRow = (item: ClassLevel) => {
+    const coordinatorName = getCoordinatorName(item.coordinatorId);
+
+    return (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="flex items-center gap-4 p-4">
+          <div className="w-10 h-10 rounded-full bg-lamaSky flex items-center justify-center">
+            <span className="text-sm font-medium text-gray-700">
+              {item.className.charAt(0)}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <h3 className="font-semibold">{item.className}</h3>
+          </div>
+        </td>
+        <td className="hidden md:table-cell">
+          <div className="flex flex-col">
+            <span className="font-medium">{coordinatorName}</span>
+            {coordinatorName !== item.coordinatorId && (
+              <span className="text-xs text-gray-400">{item.coordinatorId}</span>
+            )}
+          </div>
+        </td>
+        <td className="hidden lg:table-cell">
+          {item.subjectIds?.length || 0} subjects
+        </td>
+        <td>
+          <div className="flex items-center gap-2">
+            {role === "admin" && (
+              <>
+                <FormModal table="classLevel" type="update" data={item} />
+                <FormModal table="classLevel" type="delete" id={item.id} />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  // Helper function to get class level name
+  const getClassLevelName = (arm: ClassArm): string => {
+    // First try to get from nested classLevel object
+    if (arm.classLevel) {
+      return arm.classLevel.className || arm.classLevel.name || `Class ${arm.classLevelId}`;
+    }
+    // Fall back to looking up in classLevels array
+    const classLevel = classLevels.find(
+      (level) => String(level.id) === String(arm.classLevelId)
+    );
+    return classLevel?.className || `Class ${arm.classLevelId}`;
+  };
+
+  // Helper function to get teacher name
+  const getTeacherName = (arm: ClassArm): string => {
+    // First try to get from nested teacher object
+    if (arm.teacher) {
+      const name = `${arm.teacher.firstName || ""} ${arm.teacher.lastName || ""}`.trim();
+      return name || arm.teacherId;
+    }
+    // Fall back to looking up in staff array
+    const teacher = staff.find(
+      (s) => String(s.id) === String(arm.teacherId) || String(s.staffId) === String(arm.teacherId)
+    );
+    if (teacher) {
+      return `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim() || arm.teacherId;
+    }
+    return arm.teacherId;
+  };
+
+  const renderArmRow = (item: ClassArm) => {
+    const classLevelName = getClassLevelName(item);
+    const teacherName = getTeacherName(item);
+>>>>>>> habyaad_dev
 
     return (
       <tr
@@ -266,6 +424,7 @@ const ClassListPage = () => {
             </span>
           </div>
           <div className="flex flex-col">
+<<<<<<< HEAD
             <h3 className="font-semibold">{item.armName}</h3>
           </div>
         </td>
@@ -277,10 +436,30 @@ const ClassListPage = () => {
           </span>
         </td>
         <td className="hidden md:table-cell">{item.teacherId}</td>
+=======
+            <h3 className="font-semibold">{classLevelName} {item.armName}</h3>
+            <span className="text-xs text-gray-500">{classLevelName}</span>
+          </div>
+        </td>
+        <td className="hidden md:table-cell">
+          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+            {classLevelName}
+          </span>
+        </td>
+        <td className="hidden md:table-cell">
+          <div className="flex flex-col">
+            <span className="font-medium">{teacherName}</span>
+            {teacherName !== item.teacherId && (
+              <span className="text-xs text-gray-400">{item.teacherId}</span>
+            )}
+          </div>
+        </td>
+>>>>>>> habyaad_dev
         <td>
           <div className="flex items-center gap-2">
             {role === "admin" && (
               <>
+<<<<<<< HEAD
                 <FormModal 
                   table="classArm" 
                   type="update" 
@@ -291,6 +470,10 @@ const ClassListPage = () => {
                   type="delete"
                   id={item.id || item.classArmId || (item as any).armId}
                 />
+=======
+                <FormModal table="classArm" type="update" data={item} />
+                <FormModal table="classArm" type="delete" id={item.id} />
+>>>>>>> habyaad_dev
               </>
             )}
           </div>
@@ -446,8 +629,8 @@ const ClassListPage = () => {
                 type="text"
                 placeholder={
                   activeTab === "levels"
-                    ? "Search by class name or coordinator..."
-                    : "Search by arm name or teacher..."
+                    ? "Search by class name or coordinator name..."
+                    : "Search by arm name, class level, or teacher name..."
                 }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

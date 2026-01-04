@@ -12,7 +12,11 @@ export type AuthUser = {
   name?: string;
   firstName?: string;
   lastName?: string;
+<<<<<<< HEAD
   role: "ADMIN" | "TEACHER" | "STUDENT";
+=======
+  role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+>>>>>>> habyaad_dev
 };
 
 export async function getUserFromRequest(
@@ -88,6 +92,11 @@ export async function getUserFromRequest(
                 ? "TEACHER"
                 : role === "Student" || role === "student"
                 ? "STUDENT"
+<<<<<<< HEAD
+=======
+                : role === "Parent" || role === "parent"
+                ? "PARENT"
+>>>>>>> habyaad_dev
                 : "ADMIN";
 
             console.log("Extracted user from JWT:", {
@@ -143,6 +152,11 @@ export async function getUserFromRequest(
                 ? "TEACHER"
                 : userData.role === "Student"
                 ? "STUDENT"
+<<<<<<< HEAD
+=======
+                : userData.role === "Parent"
+                ? "PARENT"
+>>>>>>> habyaad_dev
                 : "ADMIN",
           };
         } else {

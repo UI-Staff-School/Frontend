@@ -26,7 +26,19 @@ type RawSession = {
   term?: RawTerm | RawTerm[];
 };
 
-function normalizeTerms(sessionsPayload: any): RawTerm[] {
+interface NormalizedTerm {
+  id: number | string | undefined;
+  name: string | undefined;
+  year: string | undefined;
+  sessionId: number | string | undefined;
+  session?: {
+    id: number | string | undefined;
+    name: string | undefined;
+  };
+  isActive?: boolean;
+}
+
+function normalizeTerms(sessionsPayload: any): NormalizedTerm[] {
   const sessionArray: RawSession[] = Array.isArray(sessionsPayload?.data)
     ? sessionsPayload.data
     : Array.isArray(sessionsPayload?.sessions)
@@ -35,7 +47,7 @@ function normalizeTerms(sessionsPayload: any): RawTerm[] {
     ? sessionsPayload
     : [];
 
-  const collectedTerms: RawTerm[] = [];
+  const collectedTerms: NormalizedTerm[] = [];
 
   const pickTerms = (session: RawSession): RawTerm[] => {
     if (Array.isArray(session.terms)) return session.terms;
@@ -47,6 +59,8 @@ function normalizeTerms(sessionsPayload: any): RawTerm[] {
   };
 
   for (const session of sessionArray) {
+    const sessionName =
+      session.name || session.sessionName || session.academicYear || session.year;
     const sessionYear =
       session.academicYear || session.year || session.sessionName || session.name;
     const sessionId = session.sessionId ?? session.id;
@@ -60,6 +74,11 @@ function normalizeTerms(sessionsPayload: any): RawTerm[] {
         name: term.name ?? term.termName ?? term.term,
         year: term.academicYear ?? term.year ?? sessionYear,
         sessionId,
+        session: {
+          id: sessionId,
+          name: sessionName,
+        },
+        isActive: (term as any).isActive,
       });
     }
   }

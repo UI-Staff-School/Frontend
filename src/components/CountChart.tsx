@@ -1,6 +1,9 @@
 "use client";
 
+<<<<<<< HEAD
 import Image from "next/image";
+=======
+>>>>>>> habyaad_dev
 import { useEffect, useState } from "react";
 import {
   RadialBarChart,
@@ -55,68 +58,77 @@ const CountChart = () => {
     {
       name: "Total",
       count: genderData.total,
-      fill: "white",
+      fill: "#f3f4f6",
     },
     {
       name: "Girls",
       count: genderData.female,
-      fill: "#FAE27C",
+      fill: "#f472b6",
     },
     {
       name: "Boys",
       count: genderData.male,
-      fill: "#C3EBFA",
+      fill: "#22c55e",
     },
   ];
 
   return (
-    <div className="bg-white rounded-xl w-full h-full p-4">
+    <div className="w-full h-full flex flex-col">
       {/* TITLE */}
+<<<<<<< HEAD
       <div className="flex justify-between items-center">
         <h1 className="text-lg font-semibold">Students</h1>
         <Image src="/moreDark.png" alt="" width={20} height={20} />
+=======
+      <div className="flex justify-between items-center mb-2">
+        <div>
+          <h1 className="text-base font-semibold text-gray-900">Students by Gender</h1>
+          <p className="text-xs text-gray-500">Gender distribution</p>
+        </div>
+>>>>>>> habyaad_dev
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-[75%]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-green-200 border-t-green-500 rounded-full animate-spin"></div>
         </div>
       ) : (
         <>
           {/* CHART */}
-          <div className="relative w-full h-[75%]">
-            <ResponsiveContainer>
+          <div className="relative flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
               <RadialBarChart
                 cx="50%"
                 cy="50%"
                 innerRadius="40%"
                 outerRadius="100%"
-                barSize={32}
+                barSize={28}
                 data={chartData}
               >
                 <RadialBar background dataKey="count" />
               </RadialBarChart>
             </ResponsiveContainer>
-            <Image
-              src="/maleFemale.png"
-              alt=""
-              width={50}
-              height={50}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+              <p className="text-2xl font-bold text-gray-900">{genderData.total}</p>
+              <p className="text-xs text-gray-500">Total</p>
+            </div>
           </div>
 
           {/* BOTTOM */}
-          <div className="flex justify-center gap-16">
-            <div className="flex flex-col gap-1">
-              <div className="w-5 h-5 bg-lamaSky rounded-full" />
-              <h1 className="font-bold">{genderData.male.toLocaleString()}</h1>
-              <h2 className="text-xs text-gray-300">Boys ({malePercentage}%)</h2>
+          <div className="flex justify-center gap-8 mt-4">
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-green-500 rounded-full" />
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{genderData.male.toLocaleString()}</p>
+                <p className="text-xs text-gray-500">Boys ({malePercentage}%)</p>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="w-5 h-5 bg-lamaYellow rounded-full" />
-              <h1 className="font-bold">{genderData.female.toLocaleString()}</h1>
-              <h2 className="text-xs text-gray-300">Girls ({femalePercentage}%)</h2>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-pink-400 rounded-full" />
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{genderData.female.toLocaleString()}</p>
+                <p className="text-xs text-gray-500">Girls ({femalePercentage}%)</p>
+              </div>
             </div>
           </div>
         </>

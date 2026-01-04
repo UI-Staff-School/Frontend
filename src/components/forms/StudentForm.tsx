@@ -2,8 +2,18 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import { showError, showSuccess } from "@/lib/toast";
+
+interface ClassArm {
+  id: number;
+  name: string;
+  classLevel?: {
+    id: number;
+    name: string;
+  };
+}
 
 const religionOptions = ["Christian", "Muslim", "Other"] as const;
 
@@ -17,7 +27,7 @@ const studentSchema = z.object({
     message:
       "Religion must be one of the following values: Christian, Muslim, Other",
   }),
-  classArmId: z.number().min(1, "Class Arm ID is required"),
+  classArmId: z.coerce.number().min(1, "Class Arm is required"),
   yearOfAdmission: z.string().min(1, "Year of admission is required"),
 });
 
@@ -30,6 +40,27 @@ interface StudentFormProps {
 
 const StudentForm = ({ type, data }: StudentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [classArms, setClassArms] = useState<ClassArm[]>([]);
+  const [loadingClassArms, setLoadingClassArms] = useState(true);
+
+  useEffect(() => {
+    const fetchClassArms = async () => {
+      try {
+        const response = await fetch("/api/class/arms", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setClassArms(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch class arms:", error);
+      } finally {
+        setLoadingClassArms(false);
+      }
+    };
+    fetchClassArms();
+  }, []);
 
   const {
     register,
@@ -39,16 +70,21 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
     reset,
   } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
-    defaultValues: data || {
-      admissionNo: "",
-      firstName: "",
-      lastName: "",
-      dateOfBirth: "",
-      gender: "",
-      religion: "",
-      classArmId: 1,
-      yearOfAdmission: "",
-    },
+    defaultValues: data
+      ? {
+          ...data,
+          classArmId: data.classArmId || data.classArm?.id || "",
+        }
+      : {
+          admissionNo: "",
+          firstName: "",
+          lastName: "",
+          dateOfBirth: "",
+          gender: "",
+          religion: "",
+          classArmId: "",
+          yearOfAdmission: "",
+        },
   });
 
   const onSubmit = async (formData: StudentFormData) => {
@@ -75,15 +111,22 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save student");
+        const text = await response.text();
+        let errorMessage = "Failed to save student";
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorData.message || errorData.detail || errorMessage;
+        } catch {
+          if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
       }
 
-      // Reset form and close modal
+      showSuccess(`Student ${type === "create" ? "created" : "updated"} successfully`);
       reset();
       window.location.reload();
-    } catch (error) {
-      console.error("Error saving student:", error);
-      alert("Failed to save student. Please try again.");
+    } catch (error: any) {
+      showError(error.message || "Failed to save student");
     } finally {
       setIsSubmitting(false);
     }
@@ -261,13 +304,28 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Class Arm ID <span className="text-red-500">*</span>
+                Class Arm <span className="text-red-500">*</span>
               </label>
-              <input
-                {...register("classArmId", { valueAsNumber: true })}
-                type="number"
-                placeholder="Enter class arm ID"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              <Controller
+                name="classArmId"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    disabled={loadingClassArms}
+                  >
+                    <option value="">
+                      {loadingClassArms ? "Loading classes..." : "Select class arm"}
+                    </option>
+                    {classArms.map((arm) => (
+                      <option key={arm.id} value={arm.id}>
+                        {arm.classLevel?.name} {arm.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               />
               {errors.classArmId && (
                 <p className="mt-1 text-sm text-red-600">

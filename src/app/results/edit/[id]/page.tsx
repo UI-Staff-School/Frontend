@@ -148,7 +148,7 @@ export default function EditResultPage() {
           </div>
         </div>
 
-        <Protected allowed={["ADMIN", "TEACHER"]} userRole={role}>
+        <Protected allowed={["ADMIN", "COORDINATOR", "TEACHER"]} userRole={role}>
           <ResultForm
             initial={result}
             onSave={handleSave}

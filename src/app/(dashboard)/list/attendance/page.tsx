@@ -41,6 +41,7 @@ const AttendancePage = () => {
   const [studentId, setStudentId] = useState("");
   const [termId, setTermId] = useState("");
   const [summary, setSummary] = useState<any | null>(null);
+  const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
 
   const filteredAttendance = useMemo(() => {
     if (!search) return attendance;
@@ -143,6 +144,39 @@ const AttendancePage = () => {
       setError(e.message || "Unable to load attendance summary");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async (format: "pdf" | "xlsx") => {
+    if (!studentId || !termId || attendance.length === 0) {
+      setError("Please load attendance data before exporting.");
+      return;
+    }
+
+    try {
+      setExporting(format);
+      const response = await fetch(
+        `/api/export/attendance/student/${studentId}/term/${termId}?format=${format}`,
+        { credentials: "include" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to export attendance");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `student-attendance-${studentId}-term-${termId}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (e: any) {
+      setError(e.message || "Failed to export attendance");
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -297,15 +331,48 @@ const AttendancePage = () => {
 
       {/* SIMPLE COUNTS */}
       {filteredAttendance.length > 0 && (
-        <div className="mt-3 text-xs text-gray-500">
-          Showing {filteredAttendance.length} records —{" "}
-          <span className="text-emerald-600 font-medium">
-            {presentCount} present
-          </span>{" "}
-          /{" "}
-          <span className="text-rose-600 font-medium">
-            {absentCount} absent
-          </span>
+        <div className="mt-3 flex items-center justify-between">
+          <div className="text-xs text-gray-500">
+            Showing {filteredAttendance.length} records —{" "}
+            <span className="text-emerald-600 font-medium">
+              {presentCount} present
+            </span>{" "}
+            /{" "}
+            <span className="text-rose-600 font-medium">
+              {absentCount} absent
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Export:</span>
+            <button
+              onClick={() => handleExport("pdf")}
+              disabled={exporting !== null}
+              className="px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+            >
+              {exporting === "pdf" ? (
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                </svg>
+              )}
+              PDF
+            </button>
+            <button
+              onClick={() => handleExport("xlsx")}
+              disabled={exporting !== null}
+              className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+            >
+              {exporting === "xlsx" ? (
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                </svg>
+              )}
+              Excel
+            </button>
+          </div>
         </div>
       )}
 

@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { useEffect, useState } from "react";
 import { normalizeClassLevels } from "@/lib/class-level-utils";
+import { showError, showSuccess } from "@/lib/toast";
 
 const schema = z.object({
   armName: z.string().min(1, { message: "Arm name is required!" }),
@@ -473,13 +474,10 @@ const ClassArmForm = ({
 
       const result = await response.json();
       console.log("Class arm created/updated successfully:", result);
+      showSuccess(`Class arm ${type === "create" ? "created" : "updated"} successfully`);
       window.location.reload();
     } catch (error: any) {
-      console.error(
-        `Error ${type === "create" ? "creating" : "updating"} class arm:`,
-        error.message
-      );
-      alert(error.message || `Failed to ${type} class arm`);
+      showError(error.message || `Failed to ${type} class arm`);
     }
   });
 

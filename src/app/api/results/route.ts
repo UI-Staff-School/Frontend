@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiHeaders } from "@/lib/api-utils";
 import { buildExternalApiUrl } from "@/lib/external-api";
 
+export const dynamic = "force-dynamic";
+
 function buildResultUrl(search: string = "") {
   return buildExternalApiUrl(`/result${search}`);
 }

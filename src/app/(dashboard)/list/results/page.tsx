@@ -188,7 +188,7 @@ export default function DashboardResultsPage() {
         </div>
       </div>
 
-      <Protected allowed={["ADMIN", "TEACHER", "STUDENT"]} userRole={role}>
+      <Protected allowed={["ADMIN", "COORDINATOR", "TEACHER"]} userRole={role}>
         {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.stats}>
@@ -204,7 +204,11 @@ export default function DashboardResultsPage() {
               <p>Students with records</p>
             </div>
           </div>
+<<<<<<< HEAD
           {(role === "ADMIN" || role === "TEACHER") && (
+=======
+          {(role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER") && (
+>>>>>>> habyaad_dev
             <>
               <Link
                 href="/results/add/multi"
@@ -295,9 +299,9 @@ export default function DashboardResultsPage() {
 
         <ResultTable
           rows={rows}
-          showStudent={role === "ADMIN" || role === "TEACHER"}
-          showTeacher={role === "ADMIN" || role === "TEACHER"}
-          canEdit={role === "ADMIN" || role === "TEACHER"}
+          showStudent={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
+          showTeacher={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
+          canEdit={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
           canAddHeadmasterComment={role === "ADMIN"}
           onEdit={handleEdit}
           onDelete={handleDelete}

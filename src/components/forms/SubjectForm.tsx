@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { showError, showSuccess } from "@/lib/toast";
 
 const schema = z.object({
   subjectName: z.string().min(1, { message: "Subject name is required!" }),
@@ -43,17 +44,21 @@ const SubjectForm = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to ${type} subject`);
+        const text = await response.text();
+        let errorMessage = `Failed to ${type} subject`;
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.error || errorData.message || errorData.detail || errorMessage;
+        } catch {
+          if (text) errorMessage = text;
+        }
+        throw new Error(errorMessage);
       }
 
+      showSuccess(`Subject ${type === "create" ? "created" : "updated"} successfully`);
       window.location.reload();
     } catch (error: any) {
-      console.error(
-        `Error ${type === "create" ? "creating" : "updating"} subject:`,
-        error.message
-      );
-      alert(error.message || `Failed to ${type} subject`);
+      showError(error.message || `Failed to ${type} subject`);
     }
   });
 

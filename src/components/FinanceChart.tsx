@@ -1,6 +1,9 @@
 "use client";
 
+<<<<<<< HEAD
 import Image from "next/image";
+=======
+>>>>>>> habyaad_dev
 import { useEffect, useState } from "react";
 import {
   BarChart,
@@ -9,7 +12,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 
@@ -57,12 +59,12 @@ const FinanceChart = () => {
     {
       name: "Collected",
       amount: paymentData?.totalCollected || 0,
-      fill: "#4ade80",
+      fill: "#22c55e",
     },
     {
       name: "Pending",
       amount: paymentData?.totalPending || 0,
-      fill: "#fbbf24",
+      fill: "#f59e0b",
     },
   ];
 
@@ -73,48 +75,84 @@ const FinanceChart = () => {
       : 0;
 
   return (
-    <div className="bg-white rounded-xl w-full h-full p-4">
+    <div className="w-full h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-lg font-semibold">Payment Overview</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+        <div>
+          <h1 className="text-base font-semibold text-gray-900">Payment Overview</h1>
+          <p className="text-xs text-gray-500">Fee collection summary</p>
+        </div>
+        {paymentData?.recentPayments !== undefined && (
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            {paymentData.recentPayments} recent payments
+          </span>
+        )}
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-[80%]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-green-200 border-t-green-500 rounded-full animate-spin"></div>
         </div>
       ) : (
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-green-50 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(paymentData?.totalCollected || 0)}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Total Collected</p>
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-green-700">
+                    {formatCurrency(paymentData?.totalCollected || 0)}
+                  </p>
+                  <p className="text-xs text-gray-600">Collected</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-yellow-50 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-yellow-600">
-                {formatCurrency(paymentData?.totalPending || 0)}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Pending</p>
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-amber-700">
+                    {formatCurrency(paymentData?.totalPending || 0)}
+                  </p>
+                  <p className="text-xs text-gray-600">Pending</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-blue-50 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">
-                {collectionRate}%
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Collection Rate</p>
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-blue-700">
+                    {collectionRate}%
+                  </p>
+                  <p className="text-xs text-gray-600">Rate</p>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Chart */}
-          <div className="h-[60%]">
+          <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                barSize={80}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
@@ -137,30 +175,20 @@ const FinanceChart = () => {
                     "Amount",
                   ]}
                   contentStyle={{
-                    borderRadius: "8px",
+                    borderRadius: "12px",
                     border: "none",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    padding: "12px"
                   }}
+                  cursor={{ fill: '#f3f4f6' }}
                 />
                 <Bar
                   dataKey="amount"
-                  fill="#4ade80"
                   radius={[8, 8, 0, 0]}
-                  barSize={60}
                 />
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Recent Payments Badge */}
-          {paymentData?.recentPayments !== undefined && (
-            <div className="mt-4 text-center">
-              <span className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm">
-                <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
-                {paymentData.recentPayments} payments in last 30 days
-              </span>
-            </div>
-          )}
         </>
       )}
     </div>
