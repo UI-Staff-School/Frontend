@@ -52,6 +52,7 @@ const StudentAttendancePage = () => {
   const [selectedTerm, setSelectedTerm] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
 
   useEffect(() => {
     fetchInitialData();
@@ -155,6 +156,38 @@ const StudentAttendancePage = () => {
     setSelectedTerm(termId);
     if (student && termId) {
       fetchAttendance(student.id, termId);
+    }
+  };
+
+  const handleExport = async (format: "pdf" | "xlsx") => {
+    if (!student || !selectedTerm || attendance.length === 0) return;
+
+    try {
+      setExporting(format);
+      const selectedTermObj = terms.find((t) => String(t.id) === selectedTerm);
+      const response = await fetch(
+        `/api/export/attendance/student/${student.id}/term/${selectedTerm}?format=${format}`,
+        { credentials: "include" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to export attendance");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `attendance-${student.admissionNo}-${selectedTermObj?.name || "term"}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      console.error("Export error:", err);
+      setError(err.message || "Failed to export attendance");
+    } finally {
+      setExporting(null);
     }
   };
 
@@ -315,9 +348,44 @@ const StudentAttendancePage = () => {
       {/* Attendance Progress Bar */}
       {selectedTerm && calculatedSummary.totalDays > 0 && (
         <div className="bg-white rounded-xl p-6 mb-6">
-          <h3 className="text-sm font-medium text-gray-600 mb-3">
-            Attendance Overview
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-600">
+              Attendance Overview
+            </h3>
+            {attendance.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Export:</span>
+                <button
+                  onClick={() => handleExport("pdf")}
+                  disabled={exporting !== null}
+                  className="px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  {exporting === "pdf" ? (
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  PDF
+                </button>
+                <button
+                  onClick={() => handleExport("xlsx")}
+                  disabled={exporting !== null}
+                  className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  {exporting === "xlsx" ? (
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  Excel
+                </button>
+              </div>
+            )}
+          </div>
           <div className="h-4 bg-gray-100 rounded-full overflow-hidden flex">
             <div
               className="bg-green-500 transition-all"

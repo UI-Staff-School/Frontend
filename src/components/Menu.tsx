@@ -135,6 +135,12 @@ const menuItems = [
         href: "/list/attendance",
         visible: ["admin", "coordinator", "teacher"],
       },
+      {
+        icon: "/announcement.png",
+        label: "Announcements",
+        href: "/list/announcements",
+        visible: ["admin", "coordinator", "teacher", "student", "parent"],
+      },
     ],
   },
   {

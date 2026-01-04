@@ -77,6 +77,7 @@ export default function ClassTermResultsPage() {
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -201,6 +202,36 @@ export default function ClassTermResultsPage() {
 
   const getOverallGrade = (average: number) => {
     return getGrade(average);
+  };
+
+  const handleExport = async (format: "pdf" | "xlsx") => {
+    if (!selectedClass || !selectedTerm) return;
+
+    try {
+      setExporting(format);
+      const response = await fetch(
+        `/api/export/result/class/${selectedClass}/term/${selectedTerm}?format=${format}`,
+        { credentials: "include" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to export results");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `class-results-${selectedClassData?.name || "class"}-${selectedTermData?.name || "term"}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setError(err.message || "Failed to export results");
+    } finally {
+      setExporting(null);
+    }
   };
 
   // Calculate class statistics
@@ -344,7 +375,7 @@ export default function ClassTermResultsPage() {
 
         {/* Results Header */}
         {groupedResults.length > 0 && (
-          <div className="bg-purple-50 rounded-xl p-4 mb-4">
+          <div className="bg-purple-50 rounded-xl p-4 mb-4 flex items-center justify-between">
             <p className="text-purple-800 font-medium">
               <span className="font-bold">
                 {selectedClassData?.classLevel?.name} {selectedClassData?.name}
@@ -352,6 +383,36 @@ export default function ClassTermResultsPage() {
               Results - <span className="font-bold">{selectedTermData?.name}</span>
               {" "}({subjects.length} subjects, {groupedResults.length} students)
             </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleExport("pdf")}
+                disabled={exporting !== null}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              >
+                {exporting === "pdf" ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                  </svg>
+                )}
+                PDF
+              </button>
+              <button
+                onClick={() => handleExport("xlsx")}
+                disabled={exporting !== null}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              >
+                {exporting === "xlsx" ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                  </svg>
+                )}
+                Excel
+              </button>
+            </div>
           </div>
         )}
 
