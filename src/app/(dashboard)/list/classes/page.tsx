@@ -11,14 +11,21 @@ type ClassLevel = {
   id: string;
   className: string;
   coordinatorId: string;
-  subjectIds: number[];
+  subjectIds?: number[];
+  subjectsOfferred?: Array<{ subjectId: number; subjectName: string }>;
 };
 
 type ClassArm = {
-  id: string;
+  id?: string;
+  classArmId?: string | number;
+  armId?: string | number;
   armName: string;
   classLevelId: number;
   teacherId: string;
+  classLevel?: {
+    id: number;
+    className: string;
+  };
 };
 
 const classLevelColumns = [
@@ -32,9 +39,9 @@ const classLevelColumns = [
     className: "hidden md:table-cell",
   },
   {
-    header: "Subjects",
+    header: "Subjects Count",
     accessor: "subjectIds",
-    className: "hidden lg:table-cell",
+    className: "hidden md:table-cell",
   },
   {
     header: "Actions",
@@ -50,6 +57,11 @@ const classArmColumns = [
   {
     header: "Class Level",
     accessor: "classLevelId",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Subjects Count",
+    accessor: "subjects",
     className: "hidden md:table-cell",
   },
   {
@@ -98,7 +110,9 @@ const ClassListPage = () => {
 
         // Normalize class levels to ensure consistent ID field
         if (Array.isArray(levelsData)) {
-          const { normalizeClassLevels } = await import("@/lib/class-level-utils");
+          const { normalizeClassLevels } = await import(
+            "@/lib/class-level-utils"
+          );
           levelsData = normalizeClassLevels(levelsData);
         }
 
@@ -201,15 +215,26 @@ const ClassListPage = () => {
         </div>
       </td>
       <td className="hidden md:table-cell">{item.coordinatorId}</td>
-      <td className="hidden lg:table-cell">
-        {item.subjectIds?.length || 0} subjects
+      <td className="hidden md:table-cell">
+        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700">
+          <span className="text-base font-bold">
+            {item.subjectsOfferred?.length || item.subjectIds?.length || 0}
+          </span>
+          <span className="text-xs">
+            subject{(item.subjectsOfferred?.length || item.subjectIds?.length || 0) !== 1 ? 's' : ''}
+          </span>
+        </span>
       </td>
       <td>
         <div className="flex items-center gap-2">
           {role === "admin" && (
             <>
               <FormModal table="classLevel" type="update" data={item} />
-              <FormModal table="classLevel" type="delete" id={item.id} />
+              <FormModal
+                table="classLevel"
+                type="delete"
+                id={item.id || (item as any).classLevelId}
+              />
             </>
           )}
         </div>
@@ -217,35 +242,62 @@ const ClassListPage = () => {
     </tr>
   );
 
-  const renderArmRow = (item: ClassArm) => (
-    <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        <div className="w-10 h-10 rounded-full bg-lamaYellow flex items-center justify-center">
-          <span className="text-sm font-medium text-gray-700">
-            {item.armName.charAt(0)}
+  const renderArmRow = (item: ClassArm) => {
+    // Find the class level name from the classLevels array
+    const classLevel = classLevels.find(
+      (level) => String(level.id) === String(item.classLevelId)
+    );
+    const className =
+      classLevel?.className || `Class Level ${item.classLevelId}`;
+    
+    // Get subject count from the parent class level
+    // Backend returns 'subjectsOfferred' (array of objects) or 'subjectIds' (array of numbers)
+    const subjectCount = classLevel?.subjectsOfferred?.length || classLevel?.subjectIds?.length || 0;
+
+    return (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="flex items-center gap-4 p-4">
+          <div className="w-10 h-10 rounded-full bg-lamaYellow flex items-center justify-center">
+            <span className="text-sm font-medium text-gray-700">
+              {item.armName.charAt(0)}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <h3 className="font-semibold">{item.armName}</h3>
+          </div>
+        </td>
+        <td className="hidden md:table-cell">{className}</td>
+        <td className="hidden md:table-cell">
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700">
+            <span className="text-base font-bold">{subjectCount}</span>
+            <span className="text-xs">subject{subjectCount !== 1 ? 's' : ''}</span>
           </span>
-        </div>
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.armName}</h3>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.classLevelId}</td>
-      <td className="hidden md:table-cell">{item.teacherId}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          {role === "admin" && (
-            <>
-              <FormModal table="classArm" type="update" data={item} />
-              <FormModal table="classArm" type="delete" id={item.id} />
-            </>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
+        </td>
+        <td className="hidden md:table-cell">{item.teacherId}</td>
+        <td>
+          <div className="flex items-center gap-2">
+            {role === "admin" && (
+              <>
+                <FormModal 
+                  table="classArm" 
+                  type="update" 
+                  data={item}
+                />
+                <FormModal
+                  table="classArm"
+                  type="delete"
+                  id={item.id || item.classArmId || (item as any).armId}
+                />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
 
   if (loading) {
     return (
@@ -290,6 +342,11 @@ const ClassListPage = () => {
             {activeTab === "levels"
               ? `${filteredLevels.length} of ${classLevels.length} class levels`
               : `${filteredArms.length} of ${classArms.length} class arms`}
+            {activeTab === "levels" && (
+              <span className="ml-2 text-indigo-600 font-medium">
+                • {classLevels.reduce((sum, level) => sum + (level.subjectsOfferred?.length || level.subjectIds?.length || 0), 0)} total subjects assigned
+              </span>
+            )}
           </p>
         </div>
         <div className="flex justify-end">
@@ -301,6 +358,54 @@ const ClassListPage = () => {
           )}
         </div>
       </div>
+
+      {/* STATS SUMMARY - Only show for class levels */}
+      {activeTab === "levels" && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-4 border border-indigo-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-indigo-600 font-medium">Total Classes</p>
+                <p className="text-2xl font-bold text-indigo-700 mt-1">
+                  {classLevels.length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center">
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-purple-600 font-medium">Total Subjects Assigned</p>
+                <p className="text-2xl font-bold text-purple-700 mt-1">
+                  {classLevels.reduce((sum, level) => sum + (level.subjectsOfferred?.length || level.subjectIds?.length || 0), 0)}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-600 font-medium">Average Subjects/Class</p>
+                <p className="text-2xl font-bold text-green-700 mt-1">
+                  {classLevels.length > 0
+                    ? Math.round(
+                        (classLevels.reduce((sum, level) => sum + (level.subjectsOfferred?.length || level.subjectIds?.length || 0), 0) /
+                          classLevels.length) *
+                          10
+                      ) / 10
+                    : 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TABS */}
       <div className="border-b border-gray-200 mb-4">

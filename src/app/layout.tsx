@@ -6,8 +6,8 @@ import ToasterProvider from "@/components/ToasterProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lama Dev School Management Dashboard",
-  description: "Next.js School Management System",
+  title: "UI Staff School Management System",
+  description: "UI Staff School Management System",
 };
 
 export default function RootLayout({

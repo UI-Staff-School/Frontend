@@ -257,7 +257,6 @@ const SingleTeacherPage = () => {
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🎓</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Qualification
@@ -271,7 +270,6 @@ const SingleTeacherPage = () => {
             <div className="bg-gradient-to-br from-orange-50 to-red-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">👤</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Gender
@@ -285,7 +283,6 @@ const SingleTeacherPage = () => {
             <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🕊️</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Religion
@@ -299,7 +296,6 @@ const SingleTeacherPage = () => {
             <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">📅</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Date of Birth

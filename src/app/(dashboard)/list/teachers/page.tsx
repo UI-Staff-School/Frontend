@@ -80,7 +80,9 @@ const TeacherListPage = () => {
           throw new Error("Failed to fetch staff");
         }
         const payload = await response.json();
-        const staffArray = Array.isArray(payload) ? payload : payload.data || [];
+        const staffArray = Array.isArray(payload)
+          ? payload
+          : payload.data || [];
         setStaff(staffArray);
         setFilteredStaff(staffArray);
       } catch (err: any) {
@@ -192,7 +194,11 @@ const TeacherListPage = () => {
           {role === "admin" && (
             <>
               <FormModal table="teacher" type="update" data={item} />
-              <FormModal table="teacher" type="delete" id={item.id} />
+              <FormModal
+                table="teacher"
+                type="delete"
+                id={item.id || item.staffId}
+              />
             </>
           )}
         </div>

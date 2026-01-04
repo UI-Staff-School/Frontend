@@ -260,7 +260,6 @@ const SingleStudentPage = () => {
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🎓</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Class Arm
@@ -274,7 +273,6 @@ const SingleStudentPage = () => {
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">📅</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Year of Admission
@@ -288,7 +286,6 @@ const SingleStudentPage = () => {
             <div className="bg-gradient-to-br from-orange-50 to-red-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">👤</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Gender
@@ -302,7 +299,6 @@ const SingleStudentPage = () => {
             <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">🕊️</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Religion
@@ -316,7 +312,6 @@ const SingleStudentPage = () => {
             <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs sm:text-sm">📅</span>
                 </div>
                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                   Date of Birth
@@ -364,7 +359,6 @@ const SingleStudentPage = () => {
               </span>
             </button>
             <button className="w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
-              <span className="text-green-600 text-sm sm:text-base">📊</span>
               <span className="text-gray-700 text-sm sm:text-base">
                 View Grades
               </span>
