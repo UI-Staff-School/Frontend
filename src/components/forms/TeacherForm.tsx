@@ -16,32 +16,22 @@ const qualificationOptions = [
   "Other",
 ] as const;
 
-// Password rules: 8+ chars, letters and numbers only
+// Password schema
 const passwordSchema = z
   .string()
-  .min(8, { message: "Password must be at least 8 characters long!" })
-  .regex(/^[A-Za-z0-9]+$/, {
-    message: "Password must contain only letters and numbers",
-  })
-  .regex(/[A-Z]/, {
-    message: "Password must contain at least one uppercase letter",
-  })
-  .regex(/[a-z]/, {
-    message: "Password must contain at least one lowercase letter",
-  })
-  .regex(/[0-9]/, {
-    message: "Password must contain at least one number",
-  });
+  .min(6, { message: "Password must be at least 6 characters!" })
+  .max(100, { message: "Password must be less than 100 characters!" });
 
-const schema = z
-  .object({
-    staffId: z.string().min(1, { message: "Staff ID is required!" }),
-    firstName: z.string().min(1, { message: "First name is required!" }),
-    lastName: z.string().min(1, { message: "Last name is required!" }),
-    dateOfBirth: z
-      .string()
-      .min(1, { message: "Date of birth is required!" })
-      .refine((value) => {
+// Base schema without password fields
+const baseSchema = z.object({
+  staffId: z.string().min(1, { message: "Staff ID is required!" }),
+  firstName: z.string().min(1, { message: "First name is required!" }),
+  lastName: z.string().min(1, { message: "Last name is required!" }),
+  dateOfBirth: z
+    .string()
+    .min(1, { message: "Date of birth is required!" })
+    .refine(
+      (value) => {
         const dob = new Date(value);
         if (Number.isNaN(dob.getTime())) return false;
         const today = new Date();
@@ -57,36 +47,41 @@ const schema = z
         );
         // Staff must be between 18 and 70 years old
         return dob <= minAgeDate && dob >= maxAgeDate;
-      }, {
+      },
+      {
         message: "Staff must be between 18 and 70 years old",
-      }),
-    gender: z.string().min(1, { message: "Gender is required!" }),
-    religion: z.enum(religionOptions, {
-      message:
-        "Religion must be one of the following values: Christian, Muslim, Other",
-    }),
-    phoneNumber: z
-      .string()
-      .regex(/^0\d{10}$/, {
-        message:
-          "Phone number must follow 08121007480 format (11 digits, starts with 0)",
-      }),
-    email: z
-      .string()
-      .email({ message: "Invalid email address!" })
-      .max(100, { message: "Email is too long" }),
+      }
+    ),
+  gender: z.string().min(1, { message: "Gender is required!" }),
+  religion: z.enum(religionOptions, {
+    message:
+      "Religion must be one of the following values: Christian, Muslim, Other",
+  }),
+  phoneNumber: z.string().regex(/^0\d{10}$/, {
+    message:
+      "Phone number must follow 08121007480 format (11 digits, starts with 0)",
+  }),
+  email: z
+    .string()
+    .email({ message: "Invalid email address!" })
+    .max(100, { message: "Email is too long" }),
+  address: z
+    .string()
+    .min(10, { message: "Address should be at least 10 characters long" })
+    .max(200, { message: "Address should not exceed 200 characters" }),
+  role: z.string().min(1, { message: "Role is required!" }),
+  qualification: z.enum(qualificationOptions, {
+    message:
+      "Qualification must be one of the following values: Diploma, BEd, MEd, PhD, BSc, Other",
+  }),
+});
+
+// Schema for create (with password and confirmPassword)
+const createSchema = baseSchema
+  .extend({
     password: passwordSchema,
     confirmPassword: z.string().min(1, {
       message: "Confirm Password is required",
-    }),
-    address: z
-      .string()
-      .min(10, { message: "Address should be at least 10 characters long" })
-      .max(200, { message: "Address should not exceed 200 characters" }),
-    role: z.string().min(1, { message: "Role is required!" }),
-    qualification: z.enum(qualificationOptions, {
-      message:
-        "Qualification must be one of the following values: Diploma, BEd, MEd, PhD, BSc, Other",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -94,7 +89,14 @@ const schema = z
     path: ["confirmPassword"],
   });
 
-type Inputs = z.infer<typeof schema>;
+// Schema for update (password optional, no confirmPassword)
+const updateSchema = baseSchema.extend({
+  password: passwordSchema.optional(),
+});
+
+type CreateInputs = z.infer<typeof createSchema>;
+type UpdateInputs = z.infer<typeof updateSchema>;
+type Inputs = CreateInputs | UpdateInputs;
 
 const TeacherForm = ({
   type,
@@ -103,6 +105,7 @@ const TeacherForm = ({
   type: "create" | "update";
   data?: any;
 }) => {
+  const schema = type === "create" ? createSchema : updateSchema;
   const {
     register,
     handleSubmit,
@@ -116,21 +119,14 @@ const TeacherForm = ({
       const url = type === "create" ? "/api/staff" : `/api/staff/${data?.id}`;
       const method = type === "create" ? "POST" : "PUT";
 
-      // Build payload matching API schema (exclude confirmPassword)
-      const payload = {
-        staffId: formData.staffId,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
-        gender: formData.gender,
-        religion: formData.religion,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        password: formData.password,
-        address: formData.address,
-        role: formData.role,
-        qualification: formData.qualification,
-      };
+      // Prepare payload - exclude confirmPassword if it exists
+      const payload =
+        type === "create"
+          ? (() => {
+              const { confirmPassword, ...rest } = formData as CreateInputs;
+              return rest;
+            })()
+          : (formData as UpdateInputs);
 
       const response = await fetch(url, {
         method,
@@ -158,7 +154,9 @@ const TeacherForm = ({
           } else if (errorData.detail) {
             errorMessage = errorData.detail;
           } else if (Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.map((e: any) => e.message || e).join(", ");
+            errorMessage = errorData.errors
+              .map((e: any) => e.message || e)
+              .join(", ");
           }
         } catch {
           if (text) errorMessage = text;
@@ -167,7 +165,9 @@ const TeacherForm = ({
         throw new Error(errorMessage);
       }
 
-      showSuccess(`Staff ${type === "create" ? "created" : "updated"} successfully`);
+      showSuccess(
+        `Staff ${type === "create" ? "created" : "updated"} successfully`
+      );
       window.location.reload();
     } catch (error: any) {
       showError(error.message || `Failed to ${type} staff`);
@@ -181,7 +181,7 @@ const TeacherForm = ({
         <div className="text-center border-b border-gray-200 pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl text-white font-bold">
-              {type === "create" ? "+" : "✏️"}
+              {type === "create" ? "+" : "Edit"}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -197,9 +197,7 @@ const TeacherForm = ({
         {/* Basic Information Section */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">👤</span>
-            </div>
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center"></div>
             <h2 className="text-lg font-semibold text-gray-900">
               Basic Information
             </h2>
@@ -461,7 +459,7 @@ const TeacherForm = ({
         <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">🔐</span>
+              <span className="text-white text-sm">Lock</span>
             </div>
             <h2 className="text-lg font-semibold text-gray-900">
               Authentication
@@ -471,41 +469,52 @@ const TeacherForm = ({
           <div className="max-w-md space-y-4">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Password <span className="text-red-500">*</span>
+                Password{" "}
+                {type === "create" && <span className="text-red-500">*</span>}
               </label>
               <input
                 {...register("password")}
                 type="password"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
-                placeholder="Enter secure password"
+                placeholder={
+                  type === "create"
+                    ? "Enter secure password"
+                    : "Enter new password (leave blank to keep current)"
+                }
               />
               {errors.password && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.password.message}
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 8 characters with uppercase,
-                lowercase, and number. Only letters and numbers allowed.
-              </p>
+              <p className="text-xs text-gray-500 mt-1"></p>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                {...register("confirmPassword")}
-                type="password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
-                placeholder="Re-enter password"
-              />
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
+            {type === "create" && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Confirm Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  {...register("confirmPassword")}
+                  type="password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Re-enter password"
+                />
+                {type === "create" &&
+                  "confirmPassword" in errors &&
+                  errors.confirmPassword && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.confirmPassword.message}
+                    </p>
+                  )}
+              </div>
+            )}
+            {type === "update" && (
+              <p className="text-xs text-gray-500 mt-1">
+                Leave password blank to keep the current password.
+              </p>
+            )}
           </div>
         </div>
 

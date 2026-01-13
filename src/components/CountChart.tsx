@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  RadialBarChart,
-  RadialBar,
-  ResponsiveContainer,
-} from "recharts";
+import { RadialBarChart, RadialBar, ResponsiveContainer } from "recharts";
 
 interface GenderData {
   male: number;
@@ -71,11 +67,11 @@ const CountChart = () => {
   return (
     <div className="w-full h-full flex flex-col">
       {/* TITLE */}
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <h1 className="text-base font-semibold text-gray-900">Students by Gender</h1>
-          <p className="text-xs text-gray-500">Gender distribution</p>
-        </div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Student Gender Distribution
+        </h2>
+        <p className="text-xs text-gray-500 mt-1">Breakdown by gender</p>
       </div>
 
       {loading ? (
@@ -99,7 +95,9 @@ const CountChart = () => {
               </RadialBarChart>
             </ResponsiveContainer>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-              <p className="text-2xl font-bold text-gray-900">{genderData.total}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {genderData.total}
+              </p>
               <p className="text-xs text-gray-500">Total</p>
             </div>
           </div>
@@ -109,15 +107,23 @@ const CountChart = () => {
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-green-500 rounded-full" />
               <div>
-                <p className="text-sm font-semibold text-gray-900">{genderData.male.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Boys ({malePercentage}%)</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {genderData.male.toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Boys ({malePercentage}%)
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-pink-400 rounded-full" />
               <div>
-                <p className="text-sm font-semibold text-gray-900">{genderData.female.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Girls ({femalePercentage}%)</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {genderData.female.toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Girls ({femalePercentage}%)
+                </p>
               </div>
             </div>
           </div>

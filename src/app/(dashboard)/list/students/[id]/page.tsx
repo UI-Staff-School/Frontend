@@ -80,12 +80,22 @@ const SingleStudentPage = () => {
         setLoading(true);
 
         // Fetch student, class arms, class levels, results, and attendance in parallel
-        const [studentRes, classArmsRes, classLevelsRes, resultsRes, attendanceRes] = await Promise.all([
+        const [
+          studentRes,
+          classArmsRes,
+          classLevelsRes,
+          resultsRes,
+          attendanceRes,
+        ] = await Promise.all([
           fetch(`/api/student/${params.id}`, { credentials: "include" }),
           fetch("/api/class/arms", { credentials: "include" }),
           fetch("/api/class/level", { credentials: "include" }),
-          fetch(`/api/results/student/${params.id}`, { credentials: "include" }).catch(() => null),
-          fetch(`/api/attendance/student/${params.id}`, { credentials: "include" }).catch(() => null),
+          fetch(`/api/results/student/${params.id}`, {
+            credentials: "include",
+          }).catch(() => null),
+          fetch(`/api/attendance/student/${params.id}`, {
+            credentials: "include",
+          }).catch(() => null),
         ]);
 
         if (!studentRes.ok) {
@@ -97,7 +107,12 @@ const SingleStudentPage = () => {
         // Normalize - ensure student has an id
         const normalizedStudent = {
           ...studentData,
-          id: String(studentData.id || studentData.admissionNo || studentData._id || params.id),
+          id: String(
+            studentData.id ||
+              studentData.admissionNo ||
+              studentData._id ||
+              params.id
+          ),
         };
 
         setStudent(normalizedStudent);
@@ -200,7 +215,9 @@ const SingleStudentPage = () => {
   // Calculate average score
   const averageScore =
     results.length > 0
-      ? Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length)
+      ? Math.round(
+          results.reduce((sum, r) => sum + r.score, 0) / results.length
+        )
       : 0;
 
   if (loading) {
@@ -316,17 +333,23 @@ const SingleStudentPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-blue-600">{className}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {className}
+              </div>
               <div className="text-xs text-gray-500 mt-1">Current Class</div>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-green-600">{averageScore}%</div>
+              <div className="text-2xl font-bold text-green-600">
+                {averageScore}%
+              </div>
               <div className="text-xs text-gray-500 mt-1">Avg. Score</div>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {attendanceStats.total > 0
-                  ? Math.round((attendanceStats.present / attendanceStats.total) * 100)
+                  ? Math.round(
+                      (attendanceStats.present / attendanceStats.total) * 100
+                    )
                   : 0}
                 %
               </div>
@@ -338,72 +361,6 @@ const SingleStudentPage = () => {
               </div>
               <div className="text-xs text-gray-500 mt-1">Results</div>
             </div>
-          </div>
-
-          {/* Recent Results */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Recent Results
-              </h2>
-              <Link
-                href={`/list/results?student=${params.id}`}
-                className="text-sm text-lamaPurple hover:underline"
-              >
-                View All
-              </Link>
-            </div>
-            {results.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 font-medium text-gray-600">
-                        Subject
-                      </th>
-                      <th className="text-center py-2 font-medium text-gray-600">
-                        Score
-                      </th>
-                      <th className="text-center py-2 font-medium text-gray-600">
-                        Grade
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {results.map((result, index) => (
-                      <tr
-                        key={result.id || index}
-                        className="border-b border-gray-100 last:border-0"
-                      >
-                        <td className="py-3">
-                          {result.subjectName || result.subject?.subjectName || "N/A"}
-                        </td>
-                        <td className="py-3 text-center">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              result.score >= 70
-                                ? "bg-green-100 text-green-800"
-                                : result.score >= 50
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {result.score}%
-                          </span>
-                        </td>
-                        <td className="py-3 text-center font-medium">
-                          {result.grade || getGrade(result.score)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>No results available</p>
-              </div>
-            )}
           </div>
 
           {/* Student Details */}
@@ -419,7 +376,9 @@ const SingleStudentPage = () => {
                   </div>
                   <h3 className="font-medium text-gray-900">Admission No</h3>
                 </div>
-                <p className="text-gray-700 font-medium">{student.admissionNo}</p>
+                <p className="text-gray-700 font-medium">
+                  {student.admissionNo}
+                </p>
               </div>
 
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg">
@@ -437,7 +396,9 @@ const SingleStudentPage = () => {
                   <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm">Y</span>
                   </div>
-                  <h3 className="font-medium text-gray-900">Year of Admission</h3>
+                  <h3 className="font-medium text-gray-900">
+                    Year of Admission
+                  </h3>
                 </div>
                 <p className="text-gray-700 font-medium">
                   {student.yearOfAdmission
@@ -487,108 +448,7 @@ const SingleStudentPage = () => {
 
         {/* RIGHT - Sidebar */}
         <div className="lg:col-span-1 space-y-4">
-          {/* Contact Information */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Contact Information
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-purple-600 text-sm">A</span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-gray-500">Address</p>
-                  <p className="font-medium text-gray-900 break-words">
-                    {student.address || "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Attendance Summary */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Attendance</h2>
-              <Link
-                href={`/list/attendance?student=${params.id}`}
-                className="text-sm text-lamaPurple hover:underline"
-              >
-                View All
-              </Link>
-            </div>
-            {attendanceStats.total > 0 ? (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Present</span>
-                  <span className="font-medium text-green-600">
-                    {attendanceStats.present}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Absent</span>
-                  <span className="font-medium text-red-600">
-                    {attendanceStats.absent}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Late</span>
-                  <span className="font-medium text-yellow-600">
-                    {attendanceStats.late}
-                  </span>
-                </div>
-                <div className="pt-3 border-t border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-900 font-medium">Total Days</span>
-                    <span className="font-bold text-gray-900">
-                      {attendanceStats.total}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                <p>No attendance records</p>
-              </div>
-            )}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Actions
-            </h2>
-            <div className="space-y-2">
-              <Link
-                href={`/list/results?student=${params.id}`}
-                className="w-full flex items-center gap-3 p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
-              >
-                <span className="text-green-600">R</span>
-                <span className="text-gray-700">View All Results</span>
-              </Link>
-              <Link
-                href={`/list/attendance?student=${params.id}`}
-                className="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
-              >
-                <span className="text-blue-600">A</span>
-                <span className="text-gray-700">View Attendance</span>
-              </Link>
-              {role === "admin" && (
-                <>
-                  <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors">
-                    <span className="text-purple-600">P</span>
-                    <span className="text-gray-700">Print Report Card</span>
-                  </button>
-                  <FormModal
-                    table="student"
-                    type="delete"
-                    id={parseInt(student.id)}
-                  />
-                </>
-              )}
-            </div>
-          </div>
+          {/* Additional sidebar content can go here */}
         </div>
       </div>
     </div>

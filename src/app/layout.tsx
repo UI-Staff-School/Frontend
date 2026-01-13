@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Suspense } from "react";
-import "./globals.css";
 import ToasterProvider from "@/components/ToasterProvider";
-import NavigationProgress from "@/components/NavigationProgress";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lama Dev School Management Dashboard",
-  description: "Next.js School Management System",
+  title: "UI Staff School Management System",
+  description: "UI Staff School Management System",
 };
 
 export default function RootLayout({
@@ -20,9 +18,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Suspense fallback={null}>
-          <NavigationProgress />
-        </Suspense>
         <ToasterProvider />
         {children}
       </body>

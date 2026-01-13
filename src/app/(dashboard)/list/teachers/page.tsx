@@ -80,14 +80,13 @@ const TeacherListPage = () => {
           throw new Error("Failed to fetch staff");
         }
         const payload = await response.json();
-        let staffArray = Array.isArray(payload) ? payload : payload.data || [];
-
-        // Normalize staff data - ensure each staff member has an id
-        staffArray = staffArray.map((member: any) => ({
-          ...member,
-          id: String(member.id || member.staffId || member._id || ""),
-        }));
-
+        const staffArray = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.staff)
+          ? payload.staff
+          : Array.isArray(payload?.data)
+          ? payload.data
+          : [];
         setStaff(staffArray);
         setFilteredStaff(staffArray);
       } catch (err: any) {
@@ -199,7 +198,6 @@ const TeacherListPage = () => {
           {role === "admin" && (
             <>
               <FormModal table="teacher" type="update" data={item} />
-              <FormModal table="teacher" type="delete" id={item.staffId || item.id} />
             </>
           )}
         </div>

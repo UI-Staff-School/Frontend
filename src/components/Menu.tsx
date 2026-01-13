@@ -10,54 +10,6 @@ const menuItems = [
     title: "MENU",
     items: [
       {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/admin",
-        visible: ["admin"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/teacher",
-        visible: ["teacher"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/student",
-        visible: ["student"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/parent",
-        visible: ["parent"],
-      },
-      {
-        icon: "/result.png",
-        label: "My Results",
-        href: "/student/results",
-        visible: ["student"],
-      },
-      {
-        icon: "/attendance.png",
-        label: "My Attendance",
-        href: "/student/attendance",
-        visible: ["student"],
-      },
-      {
-        icon: "/finance.png",
-        label: "My Fees",
-        href: "/student/fees",
-        visible: ["student"],
-      },
-      {
-        icon: "/home.png",
-        label: "Dashboard",
-        href: "/admin",
-        visible: ["coordinator"],
-      },
-      {
         icon: "/teacher.png",
         label: "Teachers",
         href: "/list/teachers",
@@ -73,13 +25,6 @@ const menuItems = [
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",
-        visible: ["admin"],
-      },
-      {
-        icon: "/student.png",
-        label: "My Children",
-        href: "/parent/children",
-        visible: ["parent"],
       },
       {
         icon: "/subject.png",
@@ -93,47 +38,11 @@ const menuItems = [
         href: "/list/classes",
         visible: ["admin", "coordinator", "teacher"],
       },
-      {
-        icon: "/calendar.png",
-        label: "Sessions",
-        href: "/list/sessions",
-        visible: ["admin"],
-      },
-      {
-        icon: "/student.png",
-        label: "Alumni",
-        href: "/list/alumni",
-        visible: ["admin"],
-      },
-      {
-        icon: "/finance.png",
-        label: "Fees",
-        href: "/list/fees",
-        visible: ["admin"],
-      },
-      {
-        icon: "/finance.png",
-        label: "Payments",
-        href: "/list/payments",
-        visible: ["admin"],
-      },
+      {},
       {
         icon: "/result.png",
         label: "Results",
         href: "/list/results",
-        visible: ["admin", "coordinator", "teacher"],
-      },
-      {
-        icon: "/result.png",
-        label: "Class Rankings",
-        href: "/list/results/rankings",
-        visible: ["admin", "coordinator", "teacher"],
-      },
-      {
-        icon: "/attendance.png",
-        label: "Attendance",
-        href: "/list/attendance",
-        visible: ["admin", "coordinator", "teacher"],
       },
       {
         icon: "/announcement.png",
@@ -150,13 +59,11 @@ const menuItems = [
         icon: "/profile.png",
         label: "Profile",
         href: "/profile",
-        visible: ["admin", "coordinator", "teacher", "student", "parent"],
       },
       {
         icon: "/setting.png",
         label: "Settings",
         href: "/settings",
-        visible: ["admin"],
       },
     ],
   },
@@ -197,7 +104,10 @@ const Menu = () => {
       <div className="px-3 py-4">
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+            <div
+              key={i}
+              className="h-10 bg-gray-100 rounded-xl animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -208,8 +118,8 @@ const Menu = () => {
     <div className="px-3 py-4 text-sm">
       {menuItems.map((section) => {
         // Filter items for this section based on user role
-        const visibleItems = section.items.filter((item) =>
-          item.visible.includes(userRole)
+        const visibleItems = section.items.filter(
+          (item) => item.visible?.includes(userRole) ?? true
         );
 
         // Don't render section if no visible items
@@ -222,21 +132,32 @@ const Menu = () => {
             </span>
             <div className="flex flex-col gap-1">
               {visibleItems.map((item) => {
-                const active = isActive(item.href);
+                const active = isActive(item.href || "");
                 return (
                   <Link
-                    href={item.href}
-                    key={item.label + item.href}
+                    href={item.href || "#"}
+                    key={item.label + (item.href || "")}
                     className={`flex items-center justify-center lg:justify-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 ${
                       active
                         ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/20"
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
-                    <div className={`w-5 h-5 flex items-center justify-center ${active ? "brightness-0 invert" : ""}`}>
-                      <Image src={item.icon} alt="" width={18} height={18} />
+                    <div
+                      className={`w-5 h-5 flex items-center justify-center ${
+                        active ? "brightness-0 invert" : ""
+                      }`}
+                    >
+                      <Image
+                        src={item.icon || ""}
+                        alt=""
+                        width={18}
+                        height={18}
+                      />
                     </div>
-                    <span className="hidden lg:block font-medium">{item.label}</span>
+                    <span className="hidden lg:block font-medium">
+                      {item.label || ""}
+                    </span>
                   </Link>
                 );
               })}

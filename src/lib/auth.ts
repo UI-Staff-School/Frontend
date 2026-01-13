@@ -12,7 +12,7 @@ export type AuthUser = {
   name?: string;
   firstName?: string;
   lastName?: string;
-  role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+  role?: string;
 };
 
 export async function getUserFromRequest(
@@ -88,8 +88,6 @@ export async function getUserFromRequest(
                 ? "TEACHER"
                 : role === "Student" || role === "student"
                 ? "STUDENT"
-                : role === "Parent" || role === "parent"
-                ? "PARENT"
                 : "ADMIN";
 
             console.log("Extracted user from JWT:", {
@@ -145,8 +143,6 @@ export async function getUserFromRequest(
                 ? "TEACHER"
                 : userData.role === "Student"
                 ? "STUDENT"
-                : userData.role === "Parent"
-                ? "PARENT"
                 : "ADMIN",
           };
         } else {
@@ -173,7 +169,7 @@ export async function getUserFromRequest(
 
 export function requireRole(user: AuthUser | null, allowed: string[]) {
   if (!user) throw new Error("Unauthorized");
-  if (!allowed.includes(user.role)) throw new Error("Forbidden");
+  if (!user.role || !allowed.includes(user.role)) throw new Error("Forbidden");
   return true;
 }
 
