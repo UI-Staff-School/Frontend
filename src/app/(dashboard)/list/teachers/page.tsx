@@ -80,6 +80,13 @@ const TeacherListPage = () => {
           throw new Error("Failed to fetch staff");
         }
         const payload = await response.json();
+        const staffArray = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.staff)
+          ? payload.staff
+          : Array.isArray(payload?.data)
+          ? payload.data
+          : [];
         setStaff(staffArray);
         setFilteredStaff(staffArray);
       } catch (err: any) {

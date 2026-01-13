@@ -16,7 +16,11 @@ const qualificationOptions = [
   "Other",
 ] as const;
 
-  });
+// Password schema
+const passwordSchema = z
+  .string()
+  .min(6, { message: "Password must be at least 6 characters!" })
+  .max(100, { message: "Password must be less than 100 characters!" });
 
 // Base schema without password fields
 const baseSchema = z.object({
@@ -115,6 +119,14 @@ const TeacherForm = ({
       const url = type === "create" ? "/api/staff" : `/api/staff/${data?.id}`;
       const method = type === "create" ? "POST" : "PUT";
 
+      // Prepare payload - exclude confirmPassword if it exists
+      const payload =
+        type === "create"
+          ? (() => {
+              const { confirmPassword, ...rest } = formData as CreateInputs;
+              return rest;
+            })()
+          : (formData as UpdateInputs);
 
       const response = await fetch(url, {
         method,
@@ -142,7 +154,9 @@ const TeacherForm = ({
           } else if (errorData.detail) {
             errorMessage = errorData.detail;
           } else if (Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.map((e: any) => e.message || e).join(", ");
+            errorMessage = errorData.errors
+              .map((e: any) => e.message || e)
+              .join(", ");
           }
         } catch {
           if (text) errorMessage = text;
@@ -151,7 +165,9 @@ const TeacherForm = ({
         throw new Error(errorMessage);
       }
 
-      showSuccess(`Staff ${type === "create" ? "created" : "updated"} successfully`);
+      showSuccess(
+        `Staff ${type === "create" ? "created" : "updated"} successfully`
+      );
       window.location.reload();
     } catch (error: any) {
       showError(error.message || `Failed to ${type} staff`);
@@ -181,8 +197,7 @@ const TeacherForm = ({
         {/* Basic Information Section */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            </div>
+            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center"></div>
             <h2 className="text-lg font-semibold text-gray-900">
               Basic Information
             </h2>
@@ -472,8 +487,7 @@ const TeacherForm = ({
                   {errors.password.message}
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
-              </p>
+              <p className="text-xs text-gray-500 mt-1"></p>
             </div>
 
             {type === "create" && (

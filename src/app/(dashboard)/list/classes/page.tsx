@@ -22,8 +22,22 @@ type ClassArm = {
   armName: string;
   classLevelId: number;
   teacherId: string;
+  teacher?: {
+    firstName: string;
+    lastName: string;
+  };
   classLevel?: {
     id: number;
+    className?: string;
+    name?: string;
+  };
+};
+
+type Staff = {
+  id: string | number;
+  staffId?: string;
+  firstName: string;
+  lastName: string;
 };
 
 const classLevelColumns = [
@@ -58,6 +72,7 @@ const classArmColumns = [
     className: "hidden md:table-cell",
   },
   {
+    header: "Teacher",
     accessor: "teacherId",
     className: "hidden md:table-cell",
   },
@@ -84,11 +99,13 @@ const ClassListPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [levelsResponse, armsResponse, staffResponse] = await Promise.all([
-          fetch("/api/class/level", { credentials: "include" }),
-          fetch("/api/class/arms", { credentials: "include" }),
-          fetch("/api/staff", { credentials: "include" }),
-        ]);
+        const [levelsResponse, armsResponse, staffResponse] = await Promise.all(
+          [
+            fetch("/api/class/level", { credentials: "include" }),
+            fetch("/api/class/arms", { credentials: "include" }),
+            fetch("/api/staff", { credentials: "include" }),
+          ]
+        );
 
         if (!levelsResponse.ok) {
           const errorData = await levelsResponse.json().catch(() => ({}));
@@ -143,15 +160,21 @@ const ClassListPage = () => {
         filtered = filtered.filter((level) => {
           // Get coordinator name for searching
           const coordinator = staff.find(
-            (s) => String(s.id) === String(level.coordinatorId) || String(s.staffId) === String(level.coordinatorId)
+            (s) =>
+              String(s.id) === String(level.coordinatorId) ||
+              String(s.staffId) === String(level.coordinatorId)
           );
           const coordinatorName = coordinator
-            ? `${coordinator.firstName || ""} ${coordinator.lastName || ""}`.trim()
+            ? `${coordinator.firstName || ""} ${
+                coordinator.lastName || ""
+              }`.trim()
             : "";
 
           return (
             level.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            level.coordinatorId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            level.coordinatorId
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
             coordinatorName.toLowerCase().includes(searchTerm.toLowerCase())
           );
         });
@@ -201,19 +224,27 @@ const ClassListPage = () => {
           // Get teacher name for searching
           let teacherName = "";
           if (arm.teacher) {
-            teacherName = `${arm.teacher.firstName || ""} ${arm.teacher.lastName || ""}`.trim();
+            teacherName = `${arm.teacher.firstName || ""} ${
+              arm.teacher.lastName || ""
+            }`.trim();
           } else {
             const teacher = staff.find(
-              (s) => String(s.id) === String(arm.teacherId) || String(s.staffId) === String(arm.teacherId)
+              (s) =>
+                String(s.id) === String(arm.teacherId) ||
+                String(s.staffId) === String(arm.teacherId)
             );
             if (teacher) {
-              teacherName = `${teacher.firstName || ""} ${teacher.lastName || ""}`.trim();
+              teacherName = `${teacher.firstName || ""} ${
+                teacher.lastName || ""
+              }`.trim();
             }
           }
 
+          const teacherIdStr = String(arm.teacherId || "");
+
           return (
             arm.armName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            arm.teacherId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            teacherIdStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
             classLevelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             teacherName.toLowerCase().includes(searchTerm.toLowerCase())
           );
@@ -235,10 +266,79 @@ const ClassListPage = () => {
     }
   }, [classLevels, classArms, staff, searchTerm, sortBy, sortOrder, activeTab]);
 
+  const renderLevelRow = (item: ClassLevel) => {
+    const coordinator = staff.find(
+      (s) =>
+        String(s.id) === String(item.coordinatorId) ||
+        String(s.staffId) === String(item.coordinatorId)
+    );
+    const coordinatorName = coordinator
+      ? `${coordinator.firstName || ""} ${coordinator.lastName || ""}`.trim()
+      : item.coordinatorId || "N/A";
 
     return (
       <tr
         key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="flex items-center gap-4 p-4">
+          <div className="w-10 h-10 rounded-full bg-lamaSky flex items-center justify-center">
+            <span className="text-sm font-medium text-gray-700">
+              {item.className.charAt(0)}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <h3 className="font-semibold">{item.className}</h3>
+            <p className="text-xs text-gray-500">{coordinatorName}</p>
+          </div>
+        </td>
+        <td className="hidden md:table-cell">{coordinatorName}</td>
+        <td className="hidden md:table-cell">
+          {item.subjectsOfferred?.length || item.subjectIds?.length || 0}
+        </td>
+        <td>
+          <div className="flex items-center gap-2">
+            {role === "admin" && (
+              <>
+                <FormModal table="classLevel" type="update" data={item} />
+                <FormModal table="classLevel" type="delete" id={item.id} />
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderArmRow = (item: ClassArm) => {
+    const classLevelName =
+      item.classLevel?.className ||
+      item.classLevel?.name ||
+      classLevels.find((l) => String(l.id) === String(item.classLevelId))
+        ?.className ||
+      "";
+
+    let teacherName = "";
+    if (item.teacher) {
+      teacherName = `${item.teacher.firstName || ""} ${
+        item.teacher.lastName || ""
+      }`.trim();
+    } else {
+      const teacher = staff.find(
+        (s) =>
+          String(s.id) === String(item.teacherId) ||
+          String(s.staffId) === String(item.teacherId)
+      );
+      if (teacher) {
+        teacherName = `${teacher.firstName || ""} ${
+          teacher.lastName || ""
+        }`.trim();
+      }
+    }
+
+    return (
+      <tr
+        key={item.id || item.classArmId}
         className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
       >
         <td className="flex items-center gap-4 p-4">
@@ -248,10 +348,26 @@ const ClassListPage = () => {
             </span>
           </div>
           <div className="flex flex-col">
+            <h3 className="font-semibold">{item.armName}</h3>
+            <p className="text-xs text-gray-500">{classLevelName}</p>
+          </div>
+        </td>
+        <td className="hidden md:table-cell">
+          {classLevelName || item.classLevelId}
+        </td>
+        <td className="hidden md:table-cell">
+          {teacherName || item.teacherId || "N/A"}
+        </td>
         <td>
           <div className="flex items-center gap-2">
             {role === "admin" && (
               <>
+                <FormModal table="classArm" type="update" data={item} />
+                <FormModal
+                  table="classArm"
+                  type="delete"
+                  id={item.id || item.classArmId}
+                />
               </>
             )}
           </div>
@@ -305,7 +421,16 @@ const ClassListPage = () => {
               : `${filteredArms.length} of ${classArms.length} class arms`}
             {activeTab === "levels" && (
               <span className="ml-2 text-indigo-600 font-medium">
-                • {classLevels.reduce((sum, level) => sum + (level.subjectsOfferred?.length || level.subjectIds?.length || 0), 0)} total subjects assigned
+                •{" "}
+                {classLevels.reduce(
+                  (sum, level) =>
+                    sum +
+                    (level.subjectsOfferred?.length ||
+                      level.subjectIds?.length ||
+                      0),
+                  0
+                )}{" "}
+                total subjects assigned
               </span>
             )}
           </p>
@@ -326,43 +451,60 @@ const ClassListPage = () => {
           <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-4 border border-indigo-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-indigo-600 font-medium">Total Classes</p>
+                <p className="text-sm text-indigo-600 font-medium">
+                  Total Classes
+                </p>
                 <p className="text-2xl font-bold text-indigo-700 mt-1">
                   {classLevels.length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center">
-              </div>
+              <div className="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center"></div>
             </div>
           </div>
           <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-600 font-medium">Total Subjects Assigned</p>
+                <p className="text-sm text-purple-600 font-medium">
+                  Total Subjects Assigned
+                </p>
                 <p className="text-2xl font-bold text-purple-700 mt-1">
-                  {classLevels.reduce((sum, level) => sum + (level.subjectsOfferred?.length || level.subjectIds?.length || 0), 0)}
+                  {classLevels.reduce(
+                    (sum, level) =>
+                      sum +
+                      (level.subjectsOfferred?.length ||
+                        level.subjectIds?.length ||
+                        0),
+                    0
+                  )}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-              </div>
+              <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center"></div>
             </div>
           </div>
           <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 font-medium">Average Subjects/Class</p>
+                <p className="text-sm text-green-600 font-medium">
+                  Average Subjects/Class
+                </p>
                 <p className="text-2xl font-bold text-green-700 mt-1">
                   {classLevels.length > 0
                     ? Math.round(
-                        (classLevels.reduce((sum, level) => sum + (level.subjectsOfferred?.length || level.subjectIds?.length || 0), 0) /
+                        (classLevels.reduce(
+                          (sum, level) =>
+                            sum +
+                            (level.subjectsOfferred?.length ||
+                              level.subjectIds?.length ||
+                              0),
+                          0
+                        ) /
                           classLevels.length) *
                           10
                       ) / 10
                     : 0}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
-              </div>
+              <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center"></div>
             </div>
           </div>
         </div>

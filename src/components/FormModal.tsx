@@ -28,7 +28,16 @@ export type TableKey =
   | "lesson"
   | "session";
 
+type DeleteConfig = {
+  endpoint: (id: string | number) => string;
+  title: string;
+  message: string;
 };
+
+type FormComponent = (
+  type: "create" | "update",
+  data?: unknown
+) => ReactElement;
 
 type TableConfig = {
   delete: DeleteConfig;
@@ -165,6 +174,8 @@ const modalConfig: ModalConfig = {
 // Component Props
 // ============================================================================
 
+type FormType = "create" | "update" | "delete";
+
 type FormModalProps = {
   table: TableKey;
   type: FormType;
@@ -183,10 +194,14 @@ const FormModal = ({
   type,
   data,
   id,
+  onSuccess,
+  onError,
+}: FormModalProps) => {
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const config = modalConfig[table];
 
   // Validate props based on type
   if (type === "delete" && !id) {

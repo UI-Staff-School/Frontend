@@ -12,6 +12,7 @@ export type AuthUser = {
   name?: string;
   firstName?: string;
   lastName?: string;
+  role?: string;
 };
 
 export async function getUserFromRequest(
@@ -168,7 +169,7 @@ export async function getUserFromRequest(
 
 export function requireRole(user: AuthUser | null, allowed: string[]) {
   if (!user) throw new Error("Unauthorized");
-  if (!allowed.includes(user.role)) throw new Error("Forbidden");
+  if (!user.role || !allowed.includes(user.role)) throw new Error("Forbidden");
   return true;
 }
 

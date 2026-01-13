@@ -9,8 +9,7 @@ import QuickStats from "@/components/QuickStats";
 
 const AdminPage = () => {
   return (
-      </div>
-
+    <div className="p-4">
       <div className="flex gap-6 flex-col xl:flex-row">
         {/* LEFT */}
         <div className="w-full xl:w-2/3 flex flex-col gap-6">
@@ -40,6 +39,13 @@ const AdminPage = () => {
           </div>
         </div>
 
+        {/* RIGHT */}
+        <div className="w-full xl:w-1/3 flex flex-col gap-6">
+          <SessionInfoCard />
+          <QuickStats />
+          <Announcements />
+          <EventCalendar />
+        </div>
       </div>
     </div>
   );

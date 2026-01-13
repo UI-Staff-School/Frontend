@@ -80,12 +80,22 @@ const SingleStudentPage = () => {
         setLoading(true);
 
         // Fetch student, class arms, class levels, results, and attendance in parallel
-        const [studentRes, classArmsRes, classLevelsRes, resultsRes, attendanceRes] = await Promise.all([
+        const [
+          studentRes,
+          classArmsRes,
+          classLevelsRes,
+          resultsRes,
+          attendanceRes,
+        ] = await Promise.all([
           fetch(`/api/student/${params.id}`, { credentials: "include" }),
           fetch("/api/class/arms", { credentials: "include" }),
           fetch("/api/class/level", { credentials: "include" }),
-          fetch(`/api/results/student/${params.id}`, { credentials: "include" }).catch(() => null),
-          fetch(`/api/attendance/student/${params.id}`, { credentials: "include" }).catch(() => null),
+          fetch(`/api/results/student/${params.id}`, {
+            credentials: "include",
+          }).catch(() => null),
+          fetch(`/api/attendance/student/${params.id}`, {
+            credentials: "include",
+          }).catch(() => null),
         ]);
 
         if (!studentRes.ok) {
@@ -97,7 +107,12 @@ const SingleStudentPage = () => {
         // Normalize - ensure student has an id
         const normalizedStudent = {
           ...studentData,
-          id: String(studentData.id || studentData.admissionNo || studentData._id || params.id),
+          id: String(
+            studentData.id ||
+              studentData.admissionNo ||
+              studentData._id ||
+              params.id
+          ),
         };
 
         setStudent(normalizedStudent);
@@ -200,7 +215,9 @@ const SingleStudentPage = () => {
   // Calculate average score
   const averageScore =
     results.length > 0
-      ? Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length)
+      ? Math.round(
+          results.reduce((sum, r) => sum + r.score, 0) / results.length
+        )
       : 0;
 
   if (loading) {
@@ -316,17 +333,23 @@ const SingleStudentPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-blue-600">{className}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {className}
+              </div>
               <div className="text-xs text-gray-500 mt-1">Current Class</div>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <div className="text-2xl font-bold text-green-600">{averageScore}%</div>
+              <div className="text-2xl font-bold text-green-600">
+                {averageScore}%
+              </div>
               <div className="text-xs text-gray-500 mt-1">Avg. Score</div>
             </div>
             <div className="bg-white rounded-xl p-4 shadow-sm text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {attendanceStats.total > 0
-                  ? Math.round((attendanceStats.present / attendanceStats.total) * 100)
+                  ? Math.round(
+                      (attendanceStats.present / attendanceStats.total) * 100
+                    )
                   : 0}
                 %
               </div>
@@ -338,8 +361,6 @@ const SingleStudentPage = () => {
               </div>
               <div className="text-xs text-gray-500 mt-1">Results</div>
             </div>
-          </div>
-
           </div>
 
           {/* Student Details */}
@@ -355,7 +376,9 @@ const SingleStudentPage = () => {
                   </div>
                   <h3 className="font-medium text-gray-900">Admission No</h3>
                 </div>
-                <p className="text-gray-700 font-medium">{student.admissionNo}</p>
+                <p className="text-gray-700 font-medium">
+                  {student.admissionNo}
+                </p>
               </div>
 
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg">
@@ -373,7 +396,9 @@ const SingleStudentPage = () => {
                   <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
                     <span className="text-white text-sm">Y</span>
                   </div>
-                  <h3 className="font-medium text-gray-900">Year of Admission</h3>
+                  <h3 className="font-medium text-gray-900">
+                    Year of Admission
+                  </h3>
                 </div>
                 <p className="text-gray-700 font-medium">
                   {student.yearOfAdmission
@@ -421,7 +446,9 @@ const SingleStudentPage = () => {
           </div>
         </div>
 
-          </div>
+        {/* RIGHT - Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Additional sidebar content can go here */}
         </div>
       </div>
     </div>

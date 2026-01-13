@@ -247,18 +247,32 @@ const SingleTeacherPage = () => {
               <div className="text-2xl font-bold text-purple-600">{staff.role}</div>
               <div className="text-xs text-gray-500 mt-1">Position</div>
             </div>
-              </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-blue-600">{assignedClasses.length}</div>
               <div className="text-xs text-gray-500 mt-1">Classes</div>
             </div>
-              </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-green-600">{staff.qualification || "N/A"}</div>
               <div className="text-xs text-gray-500 mt-1">Qualification</div>
             </div>
-                {staff.religion}
-              </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <div className="text-2xl font-bold text-orange-600">{staff.religion}</div>
               <div className="text-xs text-gray-500 mt-1">Religion</div>
             </div>
           </div>
 
+          {/* Staff Details */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Staff Details
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-sm">ID</span>
+                  </div>
+                  <h3 className="font-medium text-gray-900">Staff ID</h3>
                 </div>
                 <p className="text-gray-700 font-medium">{staff.staffId}</p>
               </div>

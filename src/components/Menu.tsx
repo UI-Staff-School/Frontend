@@ -38,8 +38,7 @@ const menuItems = [
         href: "/list/classes",
         visible: ["admin", "coordinator", "teacher"],
       },
-      {
-      },
+      {},
       {
         icon: "/result.png",
         label: "Results",
@@ -105,7 +104,10 @@ const Menu = () => {
       <div className="px-3 py-4">
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+            <div
+              key={i}
+              className="h-10 bg-gray-100 rounded-xl animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -116,8 +118,8 @@ const Menu = () => {
     <div className="px-3 py-4 text-sm">
       {menuItems.map((section) => {
         // Filter items for this section based on user role
-        const visibleItems = section.items.filter((item) =>
-          item.visible.includes(userRole)
+        const visibleItems = section.items.filter(
+          (item) => item.visible?.includes(userRole) ?? true
         );
 
         // Don't render section if no visible items
@@ -130,21 +132,32 @@ const Menu = () => {
             </span>
             <div className="flex flex-col gap-1">
               {visibleItems.map((item) => {
-                const active = isActive(item.href);
+                const active = isActive(item.href || "");
                 return (
                   <Link
-                    href={item.href}
-                    key={item.label + item.href}
+                    href={item.href || "#"}
+                    key={item.label + (item.href || "")}
                     className={`flex items-center justify-center lg:justify-start gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 ${
                       active
                         ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-500/20"
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
-                    <div className={`w-5 h-5 flex items-center justify-center ${active ? "brightness-0 invert" : ""}`}>
-                      <Image src={item.icon} alt="" width={18} height={18} />
+                    <div
+                      className={`w-5 h-5 flex items-center justify-center ${
+                        active ? "brightness-0 invert" : ""
+                      }`}
+                    >
+                      <Image
+                        src={item.icon || ""}
+                        alt=""
+                        width={18}
+                        height={18}
+                      />
                     </div>
-                    <span className="hidden lg:block font-medium">{item.label}</span>
+                    <span className="hidden lg:block font-medium">
+                      {item.label || ""}
+                    </span>
                   </Link>
                 );
               })}

@@ -204,6 +204,9 @@ export default function DashboardResultsPage() {
               <p>Students with records</p>
             </div>
           </div>
+          {(role === "ADMIN" ||
+            role === "COORDINATOR" ||
+            role === "TEACHER") && (
             <>
               <Link
                 href="/results/add/multi"
@@ -294,9 +297,15 @@ export default function DashboardResultsPage() {
 
         <ResultTable
           rows={rows}
-          showStudent={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
-          showTeacher={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
-          canEdit={role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"}
+          showStudent={
+            role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"
+          }
+          showTeacher={
+            role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"
+          }
+          canEdit={
+            role === "ADMIN" || role === "COORDINATOR" || role === "TEACHER"
+          }
           canAddHeadmasterComment={role === "ADMIN"}
           onEdit={handleEdit}
           onDelete={handleDelete}
