@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 
 interface Result {
@@ -54,11 +54,7 @@ const StudentResultsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -95,13 +91,20 @@ const StudentResultsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   const fetchResults = async (studentId: string | number, termId: string) => {
     try {
       setLoading(true);
       const res = await fetch(
-        `/api/attendance/student/${studentId}/term/${termId}`.replace("attendance", "results"),
+        `/api/attendance/student/${studentId}/term/${termId}`.replace(
+          "attendance",
+          "results"
+        ),
         { credentials: "include" }
       );
 
@@ -175,7 +178,8 @@ const StudentResultsPage = () => {
     if (!grade) return "bg-gray-100 text-gray-700";
     const g = grade.toUpperCase();
     if (g === "A" || g === "A1") return "bg-green-100 text-green-700";
-    if (g === "B" || g === "B2" || g === "B3") return "bg-blue-100 text-blue-700";
+    if (g === "B" || g === "B2" || g === "B3")
+      return "bg-blue-100 text-blue-700";
     if (g === "C" || g === "C4" || g === "C5" || g === "C6")
       return "bg-yellow-100 text-yellow-700";
     if (g === "D" || g === "D7") return "bg-orange-100 text-orange-700";
@@ -187,12 +191,10 @@ const StudentResultsPage = () => {
   // Calculate statistics
   const totalScore = results.reduce((sum, r) => sum + (r.totalScore || 0), 0);
   const averageScore = results.length > 0 ? totalScore / results.length : 0;
-  const highestScore = results.length > 0
-    ? Math.max(...results.map((r) => r.totalScore || 0))
-    : 0;
-  const lowestScore = results.length > 0
-    ? Math.min(...results.map((r) => r.totalScore || 0))
-    : 0;
+  const highestScore =
+    results.length > 0 ? Math.max(...results.map((r) => r.totalScore || 0)) : 0;
+  const lowestScore =
+    results.length > 0 ? Math.min(...results.map((r) => r.totalScore || 0)) : 0;
 
   if (loading && !student) {
     return (
@@ -343,7 +345,6 @@ const StudentResultsPage = () => {
         ) : !selectedTerm ? (
           <div className="text-center py-12 text-gray-500">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📊</span>
             </div>
             <p className="font-medium">Select a Term</p>
             <p className="text-sm mt-1">Choose a term to view your results</p>
@@ -351,7 +352,6 @@ const StudentResultsPage = () => {
         ) : results.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📋</span>
             </div>
             <p className="font-medium">No Results Found</p>
             <p className="text-sm mt-1">

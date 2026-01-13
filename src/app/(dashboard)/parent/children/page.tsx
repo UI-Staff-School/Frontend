@@ -88,7 +88,6 @@ const ChildrenListPage = () => {
       {children.length === 0 ? (
         <div className="bg-white rounded-xl p-8 text-center">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">👨‍👧‍👦</span>
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
             No Children Linked
@@ -145,14 +144,12 @@ const ChildrenListPage = () => {
                   href={`/parent/children/${child.admissionNo}/results`}
                   className="flex items-center justify-center gap-2 py-3 px-4 bg-purple-50 text-purple-700 rounded-lg font-medium hover:bg-purple-100 transition-colors"
                 >
-                  <span>📊</span>
                   Results
                 </Link>
                 <Link
                   href={`/parent/children/${child.admissionNo}/attendance`}
                   className="flex items-center justify-center gap-2 py-3 px-4 bg-teal-50 text-teal-700 rounded-lg font-medium hover:bg-teal-100 transition-colors"
                 >
-                  <span>📅</span>
                   Attendance
                 </Link>
               </div>

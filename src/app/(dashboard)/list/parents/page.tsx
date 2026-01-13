@@ -123,11 +123,14 @@ const ParentListPage = () => {
       <td className="flex items-center gap-4 p-4">
         <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full flex items-center justify-center">
           <span className="text-white font-semibold text-sm">
-            {item.firstName?.[0]}{item.lastName?.[0]}
+            {item.firstName?.[0]}
+            {item.lastName?.[0]}
           </span>
         </div>
         <div className="flex flex-col">
-          <h3 className="font-semibold">{item.firstName} {item.lastName}</h3>
+          <h3 className="font-semibold">
+            {item.firstName} {item.lastName}
+          </h3>
           <p className="text-xs text-gray-500">{item.email}</p>
           {item.relationship && (
             <span className="text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full w-fit mt-1">
@@ -149,12 +152,16 @@ const ParentListPage = () => {
             ))}
           </div>
         ) : (
-          <span className="text-gray-400 text-xs italic">No children linked</span>
+          <span className="text-gray-400 text-xs italic">
+            No children linked
+          </span>
         )}
       </td>
       <td className="hidden lg:table-cell">{item.phoneNumber}</td>
       <td className="hidden lg:table-cell">
-        <span className="text-sm text-gray-600 line-clamp-1">{item.address}</span>
+        <span className="text-sm text-gray-600 line-clamp-1">
+          {item.address}
+        </span>
       </td>
       <td>
         <div className="flex items-center gap-2">

@@ -9,7 +9,14 @@
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "ts-node prisma/seed.ts",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "seed": "node scripts/seed-all.js",
+    "seed:classes": "node scripts/seed-classes.js",
+    "seed:subjects": "node scripts/seed-subjects.js",
+    "seed:students": "node scripts/seed-students.js",
+    "seed:parents": "node scripts/seed-parents.js",
+    "seed:simple": "node scripts/seed-simple.js",
+    "seed:original": "node scripts/seed-database.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

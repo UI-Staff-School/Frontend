@@ -226,7 +226,6 @@ const ChildAttendancePage = () => {
       {attendance.length === 0 ? (
         <div className="bg-white rounded-xl p-8 text-center">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">📅</span>
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
             No Attendance Records

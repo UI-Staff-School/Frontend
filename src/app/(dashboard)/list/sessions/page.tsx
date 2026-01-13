@@ -222,7 +222,6 @@ const SessionsPage = () => {
       {sessions.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">📅</span>
           </div>
           <p className="font-medium">No sessions found</p>
           <p className="text-sm mt-1">Create your first academic session to get started</p>
@@ -252,7 +251,6 @@ const SessionsPage = () => {
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      <span className="text-xl">📅</span>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -309,14 +307,14 @@ const SessionsPage = () => {
                           className="w-7 h-7 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 transition"
                           title="Delete session"
                         >
-                          <span className="text-red-600 text-sm">🗑️</span>
+                          <span className="text-red-600 text-sm">X</span>
                         </button>
 
                         <Link
                           href={`/list/sessions/promote/${session.id}`}
                           className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-md hover:from-purple-600 hover:to-pink-600 transition"
                         >
-                          🎓 Promote
+                          Promote
                         </Link>
                       </>
                     )}

@@ -138,7 +138,7 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
           <span className="text-2xl text-white">
-            {type === "create" ? "➕" : "✏️"}
+            {type === "create" ? "+" : "Edit"}
           </span>
         </div>
         <div>
@@ -158,7 +158,6 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">👤</span>
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               Basic Information
@@ -295,7 +294,7 @@ const StudentForm = ({ type, data }: StudentFormProps) => {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">🎓</span>
+              <span className="text-white text-sm">Student</span>
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               Academic Information

@@ -9,27 +9,25 @@ import { showError, showSuccess } from "@/lib/toast";
 
 const schema = z.object({
   armName: z.string().min(1, { message: "Arm name is required!" }),
-  classLevelId: z
-    .union([z.string(), z.number()])
-    .refine(
-      (val) => {
-        // Convert to string first to handle both types
-        const strVal = String(val);
-        // Check if it's not empty
-        if (!strVal || strVal.trim() === "" || strVal === "0") {
-          return false;
-        }
-        // Check if it's not a temporary placeholder
-        if (strVal.startsWith("temp-")) {
-          return false;
-        }
-        // Try to convert to number and check if it's valid
-        const num = Number(strVal);
-        // Accept if it's a valid positive number OR a non-empty string (for string IDs)
-        return (!isNaN(num) && num > 0) || (strVal.trim().length > 0);
-      },
-      { message: "Please select a valid class level!" }
-    ),
+  classLevelId: z.union([z.string(), z.number()]).refine(
+    (val) => {
+      // Convert to string first to handle both types
+      const strVal = String(val);
+      // Check if it's not empty
+      if (!strVal || strVal.trim() === "" || strVal === "0") {
+        return false;
+      }
+      // Check if it's not a temporary placeholder
+      if (strVal.startsWith("temp-")) {
+        return false;
+      }
+      // Try to convert to number and check if it's valid
+      const num = Number(strVal);
+      // Accept if it's a valid positive number OR a non-empty string (for string IDs)
+      return (!isNaN(num) && num > 0) || strVal.trim().length > 0;
+    },
+    { message: "Please select a valid class level!" }
+  ),
   teacherId: z.string().min(1, { message: "Teacher ID is required!" }),
 });
 
@@ -67,7 +65,7 @@ const ClassArmForm = ({
       try {
         setLoadingLevels(true);
         setLoadingStaff(true);
-        
+
         // Add cache-busting timestamp to ensure fresh data
         const timestamp = new Date().getTime();
         const [levelsResponse, staffResponse] = await Promise.all([
@@ -93,7 +91,7 @@ const ClassArmForm = ({
           console.log("ClassArmForm - Raw levels payload:", levelsPayload);
           console.log("ClassArmForm - Payload type:", typeof levelsPayload);
           console.log("ClassArmForm - Is array?", Array.isArray(levelsPayload));
-          
+
           // Handle different response formats
           let levelsData: ClassLevel[] = [];
           if (Array.isArray(levelsPayload)) {
@@ -101,22 +99,31 @@ const ClassArmForm = ({
           } else if (levelsPayload && Array.isArray(levelsPayload.data)) {
             levelsData = levelsPayload.data;
           } else if (levelsPayload && levelsPayload.error) {
-            console.error("ClassArmForm - API returned error:", levelsPayload.error);
+            console.error(
+              "ClassArmForm - API returned error:",
+              levelsPayload.error
+            );
             levelsData = [];
           } else {
-            console.warn("ClassArmForm - Unexpected response format:", levelsPayload);
+            console.warn(
+              "ClassArmForm - Unexpected response format:",
+              levelsPayload
+            );
             levelsData = [];
           }
-          
+
           // Normalize the data - ensure all class levels have an 'id' field
           // The API route should already normalize this, but we'll do it here as a safety measure
           levelsData = normalizeClassLevels(levelsData);
-          
+
           console.log("ClassArmForm - Processed class levels:", levelsData);
           console.log("ClassArmForm - Total class levels:", levelsData.length);
-          
+
           if (levelsData.length > 0) {
-            console.log("ClassArmForm - Sample class level structure:", levelsData[0]);
+            console.log(
+              "ClassArmForm - Sample class level structure:",
+              levelsData[0]
+            );
             // Log each level's structure for debugging
             levelsData.forEach((level: ClassLevel, index: number) => {
               console.log(`ClassArmForm - Level ${index}:`, {
@@ -127,18 +134,24 @@ const ClassArmForm = ({
                 hasId: level.id !== undefined && level.id !== null,
               });
             });
-            
+
             // Count how many have valid IDs
-            const withValidIds = levelsData.filter(l => l.id !== undefined && l.id !== null);
-            console.log(`ClassArmForm - Class levels with valid IDs: ${withValidIds.length} out of ${levelsData.length}`);
-            
+            const withValidIds = levelsData.filter(
+              (l) => l.id !== undefined && l.id !== null
+            );
+            console.log(
+              `ClassArmForm - Class levels with valid IDs: ${withValidIds.length} out of ${levelsData.length}`
+            );
+
             if (withValidIds.length < levelsData.length) {
-              console.warn("ClassArmForm - Some class levels are missing IDs. This will prevent them from being used in class arms.");
+              console.warn(
+                "ClassArmForm - Some class levels are missing IDs. This will prevent them from being used in class arms."
+              );
             }
           } else {
             console.warn("ClassArmForm - No class levels found in response");
           }
-          
+
           setClassLevels(levelsData);
         } else {
           const errorText = await levelsResponse.text();
@@ -162,7 +175,11 @@ const ClassArmForm = ({
             const roleStr = s.role ? String(s.role).trim() : "";
             return roleStr.toLowerCase() === "teacher";
           });
-          console.log("ClassArmForm - Teachers found:", teachers.length, teachers);
+          console.log(
+            "ClassArmForm - Teachers found:",
+            teachers.length,
+            teachers
+          );
           setStaff(staffData);
         } else {
           const errorText = await staffResponse.text();
@@ -199,7 +216,7 @@ const ClassArmForm = ({
     };
 
     window.addEventListener("classLevelUpdated", handleClassLevelUpdate);
-    
+
     return () => {
       window.removeEventListener("classLevelUpdated", handleClassLevelUpdate);
     };
@@ -217,9 +234,7 @@ const ClassArmForm = ({
     defaultValues: data
       ? {
           armName: data.armName || "",
-          classLevelId: data.classLevelId
-            ? String(data.classLevelId)
-            : "",
+          classLevelId: data.classLevelId ? String(data.classLevelId) : "",
           teacherId: data.teacherId || "",
         }
       : {
@@ -233,7 +248,7 @@ const ClassArmForm = ({
   useEffect(() => {
     if (data?.teacherId && staff.length > 0) {
       const foundTeacher = staff.find(
-        (s) => 
+        (s) =>
           String(s.id || "") === String(data.teacherId) ||
           String(s.staffId || "") === String(data.teacherId)
       );
@@ -257,7 +272,7 @@ const ClassArmForm = ({
     try {
       // Find the selected teacher to get their proper ID
       const selectedTeacher = staff.find(
-        (s) => 
+        (s) =>
           String(s.id || "") === String(formData.teacherId) ||
           String(s.staffId || "") === String(formData.teacherId)
       );
@@ -268,7 +283,7 @@ const ClassArmForm = ({
 
       // Use id if available, otherwise use staffId
       const teacherId = selectedTeacher.id || selectedTeacher.staffId;
-      
+
       // Debug: Log what we're trying to match
       console.log("ClassArmForm - Attempting to find class level:", {
         formDataClassLevelId: formData.classLevelId,
@@ -282,49 +297,74 @@ const ClassArmForm = ({
 
       // Convert formData.classLevelId to string for comparison
       const formClassLevelIdStr = String(formData.classLevelId);
-      console.log("ClassArmForm - Looking for class level with form value:", formClassLevelIdStr);
-      console.log("ClassArmForm - Form value type:", typeof formData.classLevelId);
-      
+      console.log(
+        "ClassArmForm - Looking for class level with form value:",
+        formClassLevelIdStr
+      );
+      console.log(
+        "ClassArmForm - Form value type:",
+        typeof formData.classLevelId
+      );
+
       // Reject temporary placeholder IDs
-      if (formClassLevelIdStr.startsWith("index-") || formClassLevelIdStr.startsWith("temp-")) {
-        throw new Error("Please select a valid class level. The selected class level does not have a valid ID.");
+      if (
+        formClassLevelIdStr.startsWith("index-") ||
+        formClassLevelIdStr.startsWith("temp-")
+      ) {
+        throw new Error(
+          "Please select a valid class level. The selected class level does not have a valid ID."
+        );
       }
-      
+
       // Find the selected class level to get its proper ID
       // Try exact string match first
-      let selectedClassLevel = classLevels.find(
-        (level) => {
-          if (!level || level.id === undefined || level.id === null) return false;
-          const levelIdStr = String(level.id);
-          return levelIdStr === formClassLevelIdStr;
-        }
-      );
+      let selectedClassLevel = classLevels.find((level) => {
+        if (!level || level.id === undefined || level.id === null) return false;
+        const levelIdStr = String(level.id);
+        return levelIdStr === formClassLevelIdStr;
+      });
 
       // If not found, try numeric comparison (in case of type mismatch)
       if (!selectedClassLevel) {
         const formIdNum = Number(formClassLevelIdStr);
         if (!isNaN(formIdNum) && formIdNum > 0) {
-          selectedClassLevel = classLevels.find(
-            (level) => {
-              if (!level || level.id === undefined || level.id === null) return false;
-              const levelIdNum = Number(level.id);
-              return !isNaN(levelIdNum) && levelIdNum === formIdNum;
-            }
-          );
+          selectedClassLevel = classLevels.find((level) => {
+            if (!level || level.id === undefined || level.id === null)
+              return false;
+            const levelIdNum = Number(level.id);
+            return !isNaN(levelIdNum) && levelIdNum === formIdNum;
+          });
         }
       }
 
-      console.log("ClassArmForm - Selected class level found:", selectedClassLevel);
-      console.log("ClassArmForm - Available class levels:", classLevels.map(l => ({ 
-        id: l.id, 
-        idType: typeof l.id,
-        className: l.className 
-      })));
+      console.log(
+        "ClassArmForm - Selected class level found:",
+        selectedClassLevel
+      );
+      console.log(
+        "ClassArmForm - Available class levels:",
+        classLevels.map((l) => ({
+          id: l.id,
+          idType: typeof l.id,
+          className: l.className,
+        }))
+      );
 
-      if (!selectedClassLevel || selectedClassLevel.id === undefined || selectedClassLevel.id === null) {
-        console.error("ClassArmForm - Could not find class level with ID:", formData.classLevelId);
-        console.error("ClassArmForm - This might indicate a mismatch between the dropdown value and the actual class level IDs");
-        throw new Error(`Please select a valid class level. Could not find class level with ID: ${formData.classLevelId}`);
+      if (
+        !selectedClassLevel ||
+        selectedClassLevel.id === undefined ||
+        selectedClassLevel.id === null
+      ) {
+        console.error(
+          "ClassArmForm - Could not find class level with ID:",
+          formData.classLevelId
+        );
+        console.error(
+          "ClassArmForm - This might indicate a mismatch between the dropdown value and the actual class level IDs"
+        );
+        throw new Error(
+          `Please select a valid class level. Could not find class level with ID: ${formData.classLevelId}`
+        );
       }
 
       // Get the class level ID - convert to number if it's numeric
@@ -337,13 +377,20 @@ const ClassArmForm = ({
         const levelIdStr = String(selectedClassLevel.id);
         if (levelIdStr.trim().length > 0) {
           // Backend might accept string IDs, but let's try to convert to number first
-          throw new Error(`Invalid class level ID format: ${selectedClassLevel.id}. Expected a numeric ID.`);
+          throw new Error(
+            `Invalid class level ID format: ${selectedClassLevel.id}. Expected a numeric ID.`
+          );
         } else {
           throw new Error(`Invalid class level ID: ${selectedClassLevel.id}`);
         }
       }
-      
-      console.log("ClassArmForm - Final classLevelId to send:", classLevelId, "type:", typeof classLevelId);
+
+      console.log(
+        "ClassArmForm - Final classLevelId to send:",
+        classLevelId,
+        "type:",
+        typeof classLevelId
+      );
 
       const payload = {
         armName: formData.armName,
@@ -352,12 +399,59 @@ const ClassArmForm = ({
       };
 
       console.log("Sending class arm payload:", payload);
-      console.log("Selected class level:", selectedClassLevel.className, "ID:", classLevelId);
-      console.log("Selected teacher:", selectedTeacher.firstName, selectedTeacher.lastName, "ID:", teacherId);
+      console.log(
+        "Selected class level:",
+        selectedClassLevel.className,
+        "ID:",
+        classLevelId
+      );
+      console.log(
+        "Selected teacher:",
+        selectedTeacher.firstName,
+        selectedTeacher.lastName,
+        "ID:",
+        teacherId
+      );
+
+      // Get the ID - backend may return 'id', 'classArmId', or 'armId'
+      const armId = data?.id || data?.classArmId || data?.armId;
+
+      if (type === "update") {
+        if (!armId) {
+          console.error("ClassArmForm - Missing ID for update:", {
+            data,
+            allKeys: data ? Object.keys(data) : [],
+          });
+          throw new Error(
+            "Cannot update class arm: Missing ID. Please refresh the page and try again."
+          );
+        }
+
+        // Validate ID is not NaN
+        const idNum = Number(armId);
+        if (isNaN(idNum) || idNum <= 0) {
+          console.error("ClassArmForm - Invalid ID for update:", {
+            armId,
+            idNum,
+            data,
+          });
+          throw new Error(
+            `Cannot update class arm: Invalid ID (${armId}). Please refresh the page and try again.`
+          );
+        }
+      }
 
       const url =
-        type === "create" ? "/api/class/arms" : `/api/class/arms/${data?.id}`;
+        type === "create" ? "/api/class/arms" : `/api/class/arms/${armId}`;
       const method = type === "create" ? "POST" : "PUT";
+
+      console.log("ClassArmForm - Request details:", {
+        type,
+        url,
+        armId,
+        armIdType: typeof armId,
+        payload,
+      });
 
       const response = await fetch(url, {
         method,
@@ -369,9 +463,13 @@ const ClassArmForm = ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
         console.error("Backend error response:", errorData);
-        throw new Error(errorData.error || errorData.message || `Failed to ${type} class arm`);
+        throw new Error(
+          errorData.error || errorData.message || `Failed to ${type} class arm`
+        );
       }
 
       const result = await response.json();
@@ -390,7 +488,7 @@ const ClassArmForm = ({
         <div className="text-center border-b border-gray-200 pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl text-white font-bold">
-              {type === "create" ? "+" : "✏️"}
+              {type === "create" ? "+" : "Edit"}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -444,7 +542,10 @@ const ClassArmForm = ({
               }}
               render={({ field }) => {
                 // Log all class levels for debugging
-                console.log("ClassArmForm - All class levels for dropdown:", classLevels);
+                console.log(
+                  "ClassArmForm - All class levels for dropdown:",
+                  classLevels
+                );
                 classLevels.forEach((level, idx) => {
                   console.log(`ClassArmForm - Level ${idx}:`, {
                     id: level.id,
@@ -460,56 +561,81 @@ const ClassArmForm = ({
                 const validLevels = classLevels.filter((level) => {
                   // Must have a level object
                   if (!level) {
-                    console.log("ClassArmForm - Filtered out: null/undefined level");
+                    console.log(
+                      "ClassArmForm - Filtered out: null/undefined level"
+                    );
                     return false;
                   }
-                  
+
                   // MUST have an ID - we can't link without it
                   const hasId = level.id !== undefined && level.id !== null;
                   if (!hasId) {
-                    console.log("ClassArmForm - Filtered out: no ID (required for linking)", {
-                      className: level.className,
-                    });
+                    console.log(
+                      "ClassArmForm - Filtered out: no ID (required for linking)",
+                      {
+                        className: level.className,
+                      }
+                    );
                     return false;
                   }
-                  
+
                   const levelIdStr = String(level.id).trim();
-                  
+
                   // Reject empty, zero, or temporary placeholder IDs
-                  if (levelIdStr === "" || levelIdStr === "0" || levelIdStr.startsWith("temp-")) {
-                    console.log("ClassArmForm - Filtered out: invalid ID format", {
-                      id: level.id,
-                      idStr: levelIdStr,
-                      className: level.className,
-                    });
+                  if (
+                    levelIdStr === "" ||
+                    levelIdStr === "0" ||
+                    levelIdStr.startsWith("temp-")
+                  ) {
+                    console.log(
+                      "ClassArmForm - Filtered out: invalid ID format",
+                      {
+                        id: level.id,
+                        idStr: levelIdStr,
+                        className: level.className,
+                      }
+                    );
                     return false;
                   }
-                  
+
                   // Try to convert to number - if it's a valid positive number, great
                   // If it's a non-numeric string ID, that's also OK as long as it's not empty
                   const numericId = Number(levelIdStr);
                   const isValidNumeric = !isNaN(numericId) && numericId > 0;
-                  const isValidString = levelIdStr.length > 0 && !levelIdStr.startsWith("temp-");
-                  
+                  const isValidString =
+                    levelIdStr.length > 0 && !levelIdStr.startsWith("temp-");
+
                   if (isValidNumeric || isValidString) {
-                    console.log("ClassArmForm - Including level with valid ID:", {
-                      id: level.id,
-                      idStr: levelIdStr,
-                      numericId: isValidNumeric ? numericId : "N/A (string ID)",
-                      className: level.className,
-                    });
+                    console.log(
+                      "ClassArmForm - Including level with valid ID:",
+                      {
+                        id: level.id,
+                        idStr: levelIdStr,
+                        numericId: isValidNumeric
+                          ? numericId
+                          : "N/A (string ID)",
+                        className: level.className,
+                      }
+                    );
                     return true;
                   }
-                  
-                  console.log("ClassArmForm - Filtered out: ID failed validation", {
-                    id: level.id,
-                    idStr: levelIdStr,
-                    className: level.className,
-                  });
+
+                  console.log(
+                    "ClassArmForm - Filtered out: ID failed validation",
+                    {
+                      id: level.id,
+                      idStr: levelIdStr,
+                      className: level.className,
+                    }
+                  );
                   return false;
                 });
 
-                console.log("ClassArmForm - Valid levels after filtering:", validLevels.length, validLevels);
+                console.log(
+                  "ClassArmForm - Valid levels after filtering:",
+                  validLevels.length,
+                  validLevels
+                );
 
                 return (
                   <>
@@ -519,68 +645,96 @@ const ClassArmForm = ({
                       disabled={loadingLevels}
                       onChange={(e) => {
                         const value = e.target.value;
-                        console.log("ClassArmForm - Class level selected:", value);
+                        console.log(
+                          "ClassArmForm - Class level selected:",
+                          value
+                        );
                         field.onChange(value);
                       }}
                     >
                       <option value="">
-                        {loadingLevels ? "Loading class levels..." : "Select class level"}
+                        {loadingLevels
+                          ? "Loading class levels..."
+                          : "Select class level"}
                       </option>
                       {!loadingLevels && validLevels.length === 0 && (
                         <option value="" disabled>
                           No class levels available
                         </option>
                       )}
-                      {!loadingLevels && validLevels
-                        .filter((level) => {
-                          // Only include levels with actual IDs (no fallback)
-                          return level.id !== undefined && level.id !== null && String(level.id).trim() !== "";
-                        })
-                        .map((level, index) => {
-                          // Must have a valid ID at this point
-                          const levelId = String(level.id!);
-                          const displayName = level.className || `Class Level ${levelId}`;
-                          
-                          console.log(`ClassArmForm - Rendering option:`, {
-                            levelId,
-                            displayName,
-                            originalId: level.id,
-                            idType: typeof level.id,
-                          });
-                          
-                          return (
-                            <option key={levelId} value={levelId}>
-                              {displayName}
-                            </option>
-                          );
-                        })}
+                      {!loadingLevels &&
+                        validLevels
+                          .filter((level) => {
+                            // Only include levels with actual IDs (no fallback)
+                            return (
+                              level.id !== undefined &&
+                              level.id !== null &&
+                              String(level.id).trim() !== ""
+                            );
+                          })
+                          .map((level, index) => {
+                            // Must have a valid ID at this point
+                            const levelId = String(level.id!);
+                            const displayName =
+                              level.className || `Class Level ${levelId}`;
+
+                            console.log(`ClassArmForm - Rendering option:`, {
+                              levelId,
+                              displayName,
+                              originalId: level.id,
+                              idType: typeof level.id,
+                            });
+
+                            return (
+                              <option key={levelId} value={levelId}>
+                                {displayName}
+                              </option>
+                            );
+                          })}
                     </select>
                     {errors.classLevelId && (
                       <p className="mt-1 text-sm text-red-600">
                         {errors.classLevelId.message}
                       </p>
                     )}
-                    {!loadingLevels && validLevels.length === 0 && classLevels.length > 0 && (
-                      <div className="mt-1 text-sm text-yellow-600">
-                        <p className="font-semibold">⚠️ No valid class levels found. Please ensure class levels have valid IDs.</p>
-                        <p className="text-xs mt-1">
-                          Found {classLevels.length} class level(s) but none have valid IDs. 
-                          This usually means:
-                        </p>
-                        <ul className="text-xs mt-1 list-disc list-inside space-y-1">
-                          <li>The backend isn&apos;t returning ID fields in the response</li>
-                          <li>Class levels were created before IDs were properly configured</li>
-                          <li>The ID field has a different name (check console logs)</li>
-                        </ul>
-                        <p className="text-xs mt-2 font-semibold">
-                          Solution: Check the browser console for detailed logs showing the actual data structure. 
-                          You may need to recreate the class levels or fix the backend to return IDs.
-                        </p>
-                      </div>
-                    )}
+                    {!loadingLevels &&
+                      validLevels.length === 0 &&
+                      classLevels.length > 0 && (
+                        <div className="mt-1 text-sm text-yellow-600">
+                          <p className="font-semibold">
+                            WARNING: No valid class levels found. Please ensure
+                            class levels have valid IDs.
+                          </p>
+                          <p className="text-xs mt-1">
+                            Found {classLevels.length} class level(s) but none
+                            have valid IDs. This usually means:
+                          </p>
+                          <ul className="text-xs mt-1 list-disc list-inside space-y-1">
+                            <li>
+                              The backend isn&apos;t returning ID fields in the
+                              response
+                            </li>
+                            <li>
+                              Class levels were created before IDs were properly
+                              configured
+                            </li>
+                            <li>
+                              The ID field has a different name (check console
+                              logs)
+                            </li>
+                          </ul>
+                          <p className="text-xs mt-2 font-semibold">
+                            Solution: Check the browser console for detailed
+                            logs showing the actual data structure. You may need
+                            to recreate the class levels or fix the backend to
+                            return IDs.
+                          </p>
+                        </div>
+                      )}
                     {!loadingLevels && classLevels.length === 0 && (
                       <p className="mt-1 text-sm text-yellow-600">
-                        No class levels available. Please create a class level first.
+                        No class levels available. Please create a class level
+                        first.
                       </p>
                     )}
                   </>
@@ -605,15 +759,27 @@ const ClassArmForm = ({
                   const isTeacher = roleStr.toLowerCase() === "teacher";
                   // Use id if available, otherwise fall back to staffId
                   const identifier = s.id || s.staffId;
-                  const hasId = identifier !== undefined && identifier !== null && String(identifier).trim() !== "";
+                  const hasId =
+                    identifier !== undefined &&
+                    identifier !== null &&
+                    String(identifier).trim() !== "";
                   return isTeacher && hasId;
                 })
                 .map((s) => {
                   // Use id if available, otherwise use staffId as fallback
-                  const teacherId = s.id ? String(s.id) : (s.staffId ? String(s.staffId) : "");
-                  const displayName = `${s.firstName || ""} ${s.lastName || ""}${s.staffId ? ` (${s.staffId})` : ""}`.trim();
+                  const teacherId = s.id
+                    ? String(s.id)
+                    : s.staffId
+                    ? String(s.staffId)
+                    : "";
+                  const displayName = `${s.firstName || ""} ${
+                    s.lastName || ""
+                  }${s.staffId ? ` (${s.staffId})` : ""}`.trim();
                   return (
-                    <option key={teacherId || `teacher-${s.firstName}-${s.lastName}`} value={teacherId}>
+                    <option
+                      key={teacherId || `teacher-${s.firstName}-${s.lastName}`}
+                      value={teacherId}
+                    >
                       {displayName || `Staff ${teacherId}`}
                     </option>
                   );
@@ -628,14 +794,21 @@ const ClassArmForm = ({
               const roleStr = s.role ? String(s.role).trim() : "";
               const isTeacher = roleStr.toLowerCase() === "teacher";
               const identifier = s.id || s.staffId;
-              const hasId = identifier !== undefined && identifier !== null && String(identifier).trim() !== "";
+              const hasId =
+                identifier !== undefined &&
+                identifier !== null &&
+                String(identifier).trim() !== "";
               return isTeacher && hasId;
             }).length === 0 && (
               <p className="mt-1 text-sm text-yellow-600">
-                No teachers available. Please add staff members with Teacher role first.
+                No teachers available. Please add staff members with Teacher
+                role first.
                 {staff.length > 0 && (
                   <span className="block text-xs mt-1">
-                    Found {staff.length} staff member(s). Available roles: {Array.from(new Set(staff.map(s => s.role).filter(Boolean))).join(", ") || "none"}
+                    Found {staff.length} staff member(s). Available roles:{" "}
+                    {Array.from(
+                      new Set(staff.map((s) => s.role).filter(Boolean))
+                    ).join(", ") || "none"}
                   </span>
                 )}
               </p>
@@ -665,4 +838,3 @@ const ClassArmForm = ({
 };
 
 export default ClassArmForm;
-

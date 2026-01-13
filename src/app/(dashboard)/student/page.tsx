@@ -169,9 +169,6 @@ const StudentDashboard = () => {
           className="bg-white rounded-2xl p-5 hover:shadow-lg transition-shadow group border border-gray-100"
         >
           <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-green-200 transition-colors">
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
           </div>
           <h3 className="font-semibold text-gray-900">My Results</h3>
           <p className="text-sm text-gray-500 mt-1">View academic results</p>
@@ -182,9 +179,6 @@ const StudentDashboard = () => {
           className="bg-white rounded-2xl p-5 hover:shadow-lg transition-shadow group border border-gray-100"
         >
           <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
           </div>
           <h3 className="font-semibold text-gray-900">Attendance</h3>
           <p className="text-sm text-gray-500 mt-1">Check attendance record</p>
@@ -208,9 +202,6 @@ const StudentDashboard = () => {
           className="bg-white rounded-2xl p-5 hover:shadow-lg transition-shadow group border border-gray-100"
         >
           <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
-            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
           </div>
           <h3 className="font-semibold text-gray-900">My Profile</h3>
           <p className="text-sm text-gray-500 mt-1">View profile details</p>

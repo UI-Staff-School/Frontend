@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 
 interface AttendanceRecord {
@@ -54,11 +54,72 @@ const StudentAttendancePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null);
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
+  const fetchAttendance = useCallback(
+    async (studentId: string | number, termId: string) => {
+      try {
+        setLoading(true);
 
-  const fetchInitialData = async () => {
+        const [attendanceRes, summaryRes] = await Promise.all([
+          fetch(`/api/attendance/student/${studentId}/term/${termId}`, {
+            credentials: "include",
+          }),
+          fetch(`/api/attendance/student/${studentId}/term/${termId}/summary`, {
+            credentials: "include",
+          }),
+        ]);
+
+        let attendanceList: AttendanceRecord[] = [];
+        if (attendanceRes.ok) {
+          const data = await attendanceRes.json();
+          attendanceList = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.attendance)
+            ? data.attendance
+            : [];
+          setAttendance(attendanceList);
+        } else {
+          setAttendance([]);
+        }
+
+        if (summaryRes.ok) {
+          const summaryData = await summaryRes.json();
+          setSummary(summaryData);
+        } else {
+          // Calculate summary from attendance data
+          const present = attendanceList.filter(
+            (a) => a.status === "present"
+          ).length;
+          const absent = attendanceList.filter(
+            (a) => a.status === "absent"
+          ).length;
+          const late = attendanceList.filter((a) => a.status === "late").length;
+          const excused = attendanceList.filter(
+            (a) => a.status === "excused"
+          ).length;
+          const total = attendanceList.length;
+          setSummary({
+            totalDays: total,
+            presentDays: present,
+            absentDays: absent,
+            lateDays: late,
+            excusedDays: excused,
+            attendanceRate: total > 0 ? ((present + late) / total) * 100 : 0,
+          });
+        }
+      } catch (err: any) {
+        console.error("Error fetching attendance:", err);
+        setAttendance([]);
+        setSummary(null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -95,62 +156,11 @@ const StudentAttendancePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchAttendance]);
 
-  const fetchAttendance = async (studentId: string | number, termId: string) => {
-    try {
-      setLoading(true);
-
-      const [attendanceRes, summaryRes] = await Promise.all([
-        fetch(`/api/attendance/student/${studentId}/term/${termId}`, {
-          credentials: "include",
-        }),
-        fetch(`/api/attendance/student/${studentId}/term/${termId}/summary`, {
-          credentials: "include",
-        }),
-      ]);
-
-      if (attendanceRes.ok) {
-        const data = await attendanceRes.json();
-        const attendanceList = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-          ? data.data
-          : Array.isArray(data?.attendance)
-          ? data.attendance
-          : [];
-        setAttendance(attendanceList);
-      } else {
-        setAttendance([]);
-      }
-
-      if (summaryRes.ok) {
-        const summaryData = await summaryRes.json();
-        setSummary(summaryData);
-      } else {
-        // Calculate summary from attendance data
-        const present = attendance.filter((a) => a.status === "present").length;
-        const absent = attendance.filter((a) => a.status === "absent").length;
-        const late = attendance.filter((a) => a.status === "late").length;
-        const excused = attendance.filter((a) => a.status === "excused").length;
-        const total = attendance.length;
-        setSummary({
-          totalDays: total,
-          presentDays: present,
-          absentDays: absent,
-          lateDays: late,
-          excusedDays: excused,
-          attendanceRate: total > 0 ? ((present + late) / total) * 100 : 0,
-        });
-      }
-    } catch (err: any) {
-      console.error("Error fetching attendance:", err);
-      setAttendance([]);
-      setSummary(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   const handleTermChange = (termId: string) => {
     setSelectedTerm(termId);
@@ -224,7 +234,9 @@ const StudentAttendancePage = () => {
     excusedDays: attendance.filter((a) => a.status === "excused").length,
     attendanceRate:
       attendance.length > 0
-        ? ((attendance.filter((a) => a.status === "present" || a.status === "late").length) /
+        ? (attendance.filter(
+            (a) => a.status === "present" || a.status === "late"
+          ).length /
             attendance.length) *
           100
         : 0,
@@ -390,28 +402,42 @@ const StudentAttendancePage = () => {
             <div
               className="bg-green-500 transition-all"
               style={{
-                width: `${(calculatedSummary.presentDays / calculatedSummary.totalDays) * 100}%`,
+                width: `${
+                  (calculatedSummary.presentDays /
+                    calculatedSummary.totalDays) *
+                  100
+                }%`,
               }}
               title={`Present: ${calculatedSummary.presentDays} days`}
             ></div>
             <div
               className="bg-yellow-500 transition-all"
               style={{
-                width: `${(calculatedSummary.lateDays / calculatedSummary.totalDays) * 100}%`,
+                width: `${
+                  (calculatedSummary.lateDays / calculatedSummary.totalDays) *
+                  100
+                }%`,
               }}
               title={`Late: ${calculatedSummary.lateDays} days`}
             ></div>
             <div
               className="bg-blue-500 transition-all"
               style={{
-                width: `${(calculatedSummary.excusedDays / calculatedSummary.totalDays) * 100}%`,
+                width: `${
+                  (calculatedSummary.excusedDays /
+                    calculatedSummary.totalDays) *
+                  100
+                }%`,
               }}
               title={`Excused: ${calculatedSummary.excusedDays} days`}
             ></div>
             <div
               className="bg-red-500 transition-all"
               style={{
-                width: `${(calculatedSummary.absentDays / calculatedSummary.totalDays) * 100}%`,
+                width: `${
+                  (calculatedSummary.absentDays / calculatedSummary.totalDays) *
+                  100
+                }%`,
               }}
               title={`Absent: ${calculatedSummary.absentDays} days`}
             ></div>
@@ -445,7 +471,6 @@ const StudentAttendancePage = () => {
         ) : !selectedTerm ? (
           <div className="text-center py-12 text-gray-500">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📅</span>
             </div>
             <p className="font-medium">Select a Term</p>
             <p className="text-sm mt-1">
@@ -455,7 +480,6 @@ const StudentAttendancePage = () => {
         ) : attendance.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📋</span>
             </div>
             <p className="font-medium">No Attendance Records</p>
             <p className="text-sm mt-1">
@@ -474,7 +498,9 @@ const StudentAttendancePage = () => {
                     {formatDate(record.date)}
                   </p>
                   {record.remark && (
-                    <p className="text-sm text-gray-500 mt-1">{record.remark}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {record.remark}
+                    </p>
                   )}
                 </div>
                 <span

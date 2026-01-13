@@ -270,7 +270,6 @@ export default function ClassTermResultsPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 text-white mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">📋</span>
           <div>
             <h1 className="text-2xl font-bold">Class Term Results</h1>
             <p className="text-purple-100">
@@ -582,7 +581,6 @@ export default function ClassTermResultsPage() {
         ) : !fetching ? (
           <div className="bg-white rounded-xl p-12 text-center">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📋</span>
             </div>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
               Select Filters

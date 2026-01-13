@@ -56,7 +56,3 @@ export function normalizeClassLevels(levels: any[]): ClassLevel[] {
   });
 }
 
-
-
-
-

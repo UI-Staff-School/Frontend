@@ -271,7 +271,7 @@ const ParentForm = ({
         <div className="text-center border-b border-gray-200 pb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl text-white font-bold">
-              {type === "create" ? "+" : "✏️"}
+              {type === "create" ? "+" : "Edit"}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -288,7 +288,6 @@ const ParentForm = ({
         <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">👤</span>
             </div>
             <h2 className="text-lg font-semibold text-gray-900">
               Basic Information
@@ -466,7 +465,7 @@ const ParentForm = ({
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">👨‍👧‍👦</span>
+              <span className="text-white text-sm">Family</span>
             </div>
             <h2 className="text-lg font-semibold text-gray-900">
               Link Children/Students
@@ -514,7 +513,6 @@ const ParentForm = ({
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                          <span className="text-purple-600 text-sm">👤</span>
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">
